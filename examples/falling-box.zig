@@ -36,7 +36,7 @@ pub fn main(init: std.process.Init) !void {
     var terrain_drawable = terrain_rect.toDrawable();
     var terrain = zigsdl.modules.Object.init(allocator, .{
         .name = "Terrain",
-        .position = .{ .x = 0, .y = 250, .z = 0 },
+        .position = .{ .x = 0, .y = 250, .z = 100 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
         .drawable = &terrain_drawable,
     });

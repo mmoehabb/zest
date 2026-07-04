@@ -82,9 +82,9 @@ pub fn addObject(self: *Scene, obj: *Object) !void {
     obj.setScene(self);
     // Objects should be ordered descendly; ensure to preserve this ordering.
     var i: usize = 0;
-    for (self._objects.items, 0..) |item, j| {
-        i = j;
-        if (item.position.z <= obj.position.z) break;
+    for (self._objects.items) |item| {
+        if (item.position.z >= obj.position.z) break;
+        i += 1;
     }
     try self._objects.insert(self._allocator, i, obj);
 }

@@ -190,6 +190,7 @@ pub fn detach(self: *Object) void {
 /// detaching the child from its old parent.
 pub fn addChild(self: *Object, child: *Object) !void {
     defer if (self._scene) |s| s.resetMemo();
+    // TODO: should keep the children array sorted by position.z
     try self._children.append(self._allocator, child);
     if (child._parent) |_| child.detach();
     child._parent = self;
