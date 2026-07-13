@@ -4,6 +4,7 @@ const std = @import("std");
 const sdl = @import("../sdl.zig");
 
 const Globals = @import("globals/mod.zig");
+const EventManager = @import("globals/event-manager.zig");
 const types = @import("../types/mod.zig");
 const Scene = @import("scene.zig");
 
@@ -28,6 +29,7 @@ _scene: ?*Scene = null,
 _window: ?*sdl.c.SDL_Window = null,
 _renderer: ?*sdl.c.SDL_Renderer = null,
 _opened: bool = false,
+_em: *EventManager,
 
 pub fn init(
     params: struct {
@@ -43,6 +45,7 @@ pub fn init(
         .width = params.width,
         .height = params.height,
         .rate = params.rate,
+        ._em = Globals.getAll().eventManager,
     };
 }
 
@@ -78,8 +81,8 @@ pub fn open(self: *Screen) !void {
         return error.SDLInitializationFailed;
     };
 
-    // TODO: this should be handled in the event-manager. Or at least, by using it.
-    Globals.setActiveWindow(self._window);
+    Globals.setActiveWindow(self._window); // TODO: This should be handled in the event-manager. Or at least, by using it.
+    try Globals.getAll().phyzxEngine.start();
 
     self._renderer = sdl.c.SDL_CreateRenderer(self._window, null) orelse {
         sdl.c.SDL_Log("Unable to create renderer: %s", sdl.c.SDL_GetError());
@@ -97,7 +100,7 @@ pub fn open(self: *Screen) !void {
 fn update(self: *Screen) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
 
-    const event = try Globals.getAll().eventManager.invokeEventLoop();
+    const event = try self._em.invokeEventLoop();
     if (event.type == sdl.c.SDL_EVENT_QUIT) return try self.close();
 
     _ = sdl.c.SDL_RenderClear(self._renderer);

@@ -1,0 +1,80 @@
+//! A rectangular shape used for constructing the mesh.
+//! NOTE: each point is located relative to the owner (object) position.
+const std = @import("std");
+const Position = @import("./position.zig");
+const Object = @import("../modules/object.zig");
+
+const Face = @This();
+
+p1: Position = .{},
+p2: Position = .{},
+p3: Position = .{},
+p4: Position = .{},
+owner: *Object,
+
+pub fn add(self: Face, p: Position) Face {
+    return .{
+        .p1 = self.p1.add(p),
+        .p2 = self.p2.add(p),
+        .p3 = self.p3.add(p),
+        .p4 = self.p4.add(p),
+        .owner = self.owner,
+    };
+}
+
+pub fn subtract(self: Face, p: Position) Face {
+    return .{
+        .p1 = self.p1.subtract(p),
+        .p2 = self.p2.subtract(p),
+        .p3 = self.p3.subtract(p),
+        .p4 = self.p4.subtract(p),
+        .owner = self.owner,
+    };
+}
+
+/// Calculate and return the cirumference of the face.
+pub fn calCircum(self: Face) f32 {
+    const l1 = self.p2.subtract(self.p1).magnitude();
+    const l2 = self.p3.subtract(self.p2).magnitude();
+    const l3 = self.p4.subtract(self.p3).magnitude();
+    const l4 = self.p1.subtract(self.p4).magnitude();
+    return l1 + l2 + l3 + l4;
+}
+
+/// Return true if _p_ collides, or about to collides, the face.
+pub fn isPCP(self: Face, p: Position) bool {
+    var mr = self.subtract(p);
+    mr.p1 = mr.p1.divide(mr.p1.abs());
+    mr.p2 = mr.p2.divide(mr.p2.abs());
+    mr.p3 = mr.p3.divide(mr.p3.abs());
+    mr.p4 = mr.p4.divide(mr.p4.abs());
+
+    const v = mr.p1
+        .add(mr.p2)
+        .add(mr.p3)
+        .add(mr.p4)
+        .abs()
+        .divide(.{ .x = 4, .y = 4, .z = 4 });
+
+    return @floor(v.x) + @floor(v.y) + @floor(v.z) == 0;
+}
+
+/// Return an alternative face where the closed point to _p_ is
+/// substituted with _p_.
+pub fn getAlter(self: Face, p: Position) Face {
+    const face = self.add(self.owner.position);
+
+    const l1 = face.p1.subtract(p).magnitude();
+    const l2 = face.p2.subtract(p).magnitude();
+    const l3 = face.p3.subtract(p).magnitude();
+    const l4 = face.p4.subtract(p).magnitude();
+    const m = @min(l1, l2, l3, l4);
+
+    return .{
+        .p1 = if (m != l1) self.p1 else p,
+        .p2 = if (m != l2) self.p2 else p,
+        .p3 = if (m != l3) self.p3 else p,
+        .p4 = if (m != l4) self.p4 else p,
+        .owner = self.owner,
+    };
+}

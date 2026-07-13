@@ -1,4 +1,3 @@
-/// A verbose enum of different key strokes.
 pub const Key = enum {
     Unknown,
     A,
@@ -229,5 +228,4 @@ pub const Key = enum {
     X2Mouse,
 };
 
-/// A key state is down wherever a user presses it, and Up otherwise.
 pub const KeyState = enum { Up, Down };

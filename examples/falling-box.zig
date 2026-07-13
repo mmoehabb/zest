@@ -22,12 +22,19 @@ pub fn main(init: std.process.Init) !void {
     });
     defer box.deinit();
 
-    // Add scripts to the object
-    var points = [_]zigsdl.types.Position{.{}};
-    var mesh = zigsdl.scripts.Mesh{ .points = &points };
-    var rigidbody = zigsdl.scripts.Rigidbody{ .mass = 5, .gravity = true };
-    try box.addScript(@constCast(&mesh.toScript()));
-    try box.addScript(@constCast(&rigidbody.toScript()));
+    var box_faces = [_]zigsdl.types.Face{
+        .{
+            .p1 = .{ .x = -10, .y = 10 },
+            .p2 = .{ .x = 10, .y = 10 },
+            .p3 = .{ .x = 10, .y = -10 },
+            .p4 = .{ .x = -10, .y = -10 },
+            .owner = &box,
+        },
+    };
+    var box_mesh = zigsdl.scripts.Mesh{ .faces = &box_faces };
+    var box_rigidbody = zigsdl.scripts.Rigidbody{ .mass = 5, .gravity = true };
+    try box.addScript(@constCast(&box_mesh.toScript()));
+    try box.addScript(@constCast(&box_rigidbody.toScript()));
 
     var terrain_rect = zigsdl.drawables.Rect.new(
         .{ .w = 250, .h = 50, .d = 1 },
@@ -36,11 +43,23 @@ pub fn main(init: std.process.Init) !void {
     var terrain_drawable = terrain_rect.toDrawable();
     var terrain = zigsdl.modules.Object.init(allocator, .{
         .name = "Terrain",
-        .position = .{ .x = 0, .y = 250, .z = 100 },
+        .position = .{ .x = 0, .y = 250, .z = 1 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
         .drawable = &terrain_drawable,
     });
     defer terrain.deinit();
+
+    var terrain_faces = [_]zigsdl.types.Face{
+        .{
+            .p1 = .{ .x = -125, .y = 25 },
+            .p2 = .{ .x = 125, .y = 25 },
+            .p3 = .{ .x = 125, .y = -25 },
+            .p4 = .{ .x = -125, .y = -25 },
+            .owner = &terrain,
+        },
+    };
+    var terrain_mesh = zigsdl.scripts.Mesh{ .faces = &terrain_faces };
+    try terrain.addScript(@constCast(&terrain_mesh.toScript()));
 
     // Create a scene and add the obj into it
     var scene = zigsdl.modules.Scene.init(allocator);

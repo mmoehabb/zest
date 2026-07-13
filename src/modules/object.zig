@@ -65,6 +65,7 @@ pub fn init(
 pub fn deinit(self: *Object) void {
     if (self.lifecycle.preClose) |func| func(self);
 
+    self._active = false;
     if (self.drawable) |d| d.destroy();
 
     for (self._scripts.items) |script| script.end(self);
