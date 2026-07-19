@@ -12,11 +12,25 @@ const Mesh = @This();
 /// NOTE: It's relative to the objects position.
 faces: []types.Face,
 
-_script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
-    .start = start,
-    .update = update,
-    .end = end,
-},
+_allocator: std.mem.Allocator,
+_script_strategy: modules.ScriptStrategy,
+
+pub fn init(allocator: std.mem.Allocator, faces: []types.Face) !*Mesh {
+    var mesh = try allocator.create(Mesh);
+    mesh.faces = try allocator.dupe(types.Face, faces);
+    mesh._allocator = allocator;
+    mesh._script_strategy = modules.ScriptStrategy{
+        .start = start,
+        .update = update,
+        .end = end,
+    };
+    return mesh;
+}
+
+pub fn deinit(self: *Mesh) void {
+    self._allocator.free(self.faces);
+    self._allocator.destroy(self);
+}
 
 pub fn toScript(self: *Mesh) modules.Script {
     return modules.Script{

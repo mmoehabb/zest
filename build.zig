@@ -124,9 +124,9 @@ pub fn build(b: *std.Build) void {
     exm7_run_step.dependOn(&exm7_run_cmd.step);
 
     const exm8 = b.addExecutable(.{
-        .name = "example:falling-box",
+        .name = "example:falling-boxes",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("examples/falling-box.zig"),
+            .root_source_file = b.path("examples/falling-boxes.zig"),
             .target = target,
             .optimize = .Debug,
         }),
@@ -135,7 +135,7 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exm8);
 
     const exm8_run_cmd = b.addRunArtifact(exm8);
-    const exm8_run_step = b.step("example:falling-box", "Run examples/falling-box.zig");
+    const exm8_run_step = b.step("example:falling-boxes", "Run examples/falling-boxes.zig");
     exm8_run_step.dependOn(&exm8_run_cmd.step);
 
     // ***********************************

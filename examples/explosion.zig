@@ -39,11 +39,13 @@ pub fn main(init: std.process.Init) !void {
     defer obj2.deinit();
 
     // Add audioPlayer script to obj
-    var audioPlayer = zigsdl.scripts.AudioPlayer{
-        .wav_path = "./examples/assets/explosion.wav",
-        .loop = false,
-    };
-    try obj.addScript(@constCast(&audioPlayer.toScript()));
+    var audioPlayer = try zigsdl.scripts.AudioPlayer.init(
+        allocator,
+        "./examples/assets/explosion.wav",
+        false,
+    );
+    defer audioPlayer.deinit();
+    try obj.addScript(audioPlayer.toScript());
 
     // Extend the update function in the obj so that
     // the drawable changes to explode and the audio plays

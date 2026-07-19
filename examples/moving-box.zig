@@ -23,8 +23,9 @@ pub fn main(init: std.process.Init) !void {
     defer obj.deinit();
 
     // Add movement script to the object
-    var movement = zigsdl.scripts.Movement{ .velocity = 5, .smooth = true };
-    try obj.addScript(@constCast(&movement.toScript()));
+    var movement = try zigsdl.scripts.Movement.init(allocator, 5, true);
+    defer movement.deinit();
+    try obj.addScript(movement.toScript());
 
     // Add a child object to obj
     var rect2 = zigsdl.drawables.Rect.new(

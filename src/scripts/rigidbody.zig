@@ -13,13 +13,27 @@ gravity: bool,
 _landed: bool = false,
 _G: f32 = 0.00,
 
-_script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
-    .start = start,
-    .update = update,
-    .end = end,
-},
-
+_allocator: std.mem.Allocator,
+_script_strategy: modules.ScriptStrategy,
 _phyzxEngine: ?*modules.PhyzxEngine = null,
+
+pub fn init(allocator: std.mem.Allocator, mass: f32, gravity: bool) !*Rigidbody {
+    var rigidbody = try allocator.create(Rigidbody);
+    rigidbody.mass = mass;
+    rigidbody.gravity = gravity;
+    rigidbody._allocator = allocator;
+    rigidbody._script_strategy = .{
+        .start = start,
+        .update = update,
+        .end = end,
+    };
+    rigidbody._phyzxEngine = null;
+    return rigidbody;
+}
+
+pub fn deinit(self: *Rigidbody) void {
+    self._allocator.destroy(self);
+}
 
 pub fn toScript(self: *Rigidbody) modules.Script {
     return modules.Script{

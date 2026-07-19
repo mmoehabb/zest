@@ -18,7 +18,7 @@ _volume: f32 = 1.0,
 
 /// Audio file specifications like: number of channels, format, and frequency.
 /// It gets loaded by SDL_LoadWAV function.
-_audio_spec: sdl.c.SDL_AudioSpec = sdl.c.SDL_AudioSpec{},
+_audio_spec: sdl.c.SDL_AudioSpec = .{},
 
 /// The audio stream buffer; it gets loaded by SDL_LoadWAV function.
 _audio_buf: [*c]u8 = null,
@@ -42,6 +42,27 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
 },
 
 _end_invoked: bool = false,
+
+_allocator: std.mem.Allocator,
+
+pub fn init(allocator: std.mem.Allocator, path: []const u8, loop: bool) !*AudioPlayer {
+    var audioPlayer = try allocator.create(AudioPlayer);
+    audioPlayer.wav_path = path;
+    audioPlayer.loop = loop;
+    audioPlayer._volume = 1.0;
+    audioPlayer._audio_spec = .{};
+    audioPlayer._script_strategy = .{
+        .start = start,
+        .update = update,
+        .end = end,
+    };
+    audioPlayer._allocator = allocator;
+    return audioPlayer;
+}
+
+pub fn deinit(self: *AudioPlayer) void {
+    self._allocator.destroy(self);
+}
 
 pub fn toScript(self: *AudioPlayer) modules.Script {
     return modules.Script{

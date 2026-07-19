@@ -13,7 +13,7 @@ zig build example:explosion &&
 zig build example:svg &&
 zig build example:geometric-shapes &&
 zig build example:gui &&
-zig build example:falling-box
+zig build example:falling-boxes
 """
 
 
@@ -25,4 +25,4 @@ explosion = "zig build example:explosion"
 svg = "zig build example:svg"
 geometric-shapes = "zig build example:geometric-shapes"
 gui = "zig build example:gui"
-falling-box = "zig build example:falling-box"
+falling-boxes = "zig build example:falling-boxes"

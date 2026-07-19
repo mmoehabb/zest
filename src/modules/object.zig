@@ -36,8 +36,8 @@ lifecycle: types.LifeCycle = types.LifeCycle{},
 _allocator: std.mem.Allocator,
 _scene: ?*Scene = null,
 _parent: ?*Object = null,
-_scripts: std.ArrayList(*Script) = std.ArrayList(*Script).empty,
-_children: std.ArrayList(*Object) = std.ArrayList(*Object).empty,
+_scripts: std.ArrayList(Script) = .empty,
+_children: std.ArrayList(*Object) = .empty,
 _active: bool,
 
 pub fn init(
@@ -68,7 +68,7 @@ pub fn deinit(self: *Object) void {
     self._active = false;
     if (self.drawable) |d| d.destroy();
 
-    for (self._scripts.items) |script| script.end(self);
+    for (self._scripts.items) |*script| script.end(self);
     self._scripts.deinit(self._allocator);
 
     self._children.deinit(self._allocator);
@@ -81,7 +81,7 @@ pub fn start(self: *Object) !void {
     if (!self._active) return;
     if (self.lifecycle.preOpen) |func| func(self);
 
-    for (self._scripts.items) |script| script.start(self);
+    for (self._scripts.items) |*script| script.start(self);
     for (self._children.items) |child| try child.start();
 
     if (self.lifecycle.postOpen) |func| func(self);
@@ -91,7 +91,7 @@ pub fn start(self: *Object) !void {
 pub fn update(self: *Object, renderer: *sdl.c.SDL_Renderer) !void {
     if (!self._active) return;
     if (self.lifecycle.preUpdate) |func| func(self);
-    for (self._scripts.items) |script| script.update(self);
+    for (self._scripts.items) |*script| script.update(self);
 
     self.drawable.?.dim.sf = if (self._parent) |p| blk: {
         break :blk p.drawable.?.dim.scale * p.drawable.?.dim.sf;
@@ -121,7 +121,7 @@ pub fn activate(self: *Object) void {
 /// Note: Only activated objects are rendered in the scene, and their scripts are invoked.
 pub fn deactivate(self: *Object) void {
     self._active = false;
-    for (self._scripts.items) |script| script.end(self);
+    for (self._scripts.items) |*script| script.end(self);
 }
 
 pub fn setDrawable(self: *Object, drawable: *Drawable) void {
@@ -149,14 +149,14 @@ pub fn setAbsRotation(self: *Object, rot: types.Rotation) void {
     self.rotation = rot.subtract(parentRot);
 }
 
-pub fn addScript(self: *Object, script: *Script) !void {
+pub fn addScript(self: *Object, script: Script) !void {
     try self._scripts.append(self._allocator, script);
 }
 
 /// By convention, the name of any script should equal exactly the name of the type.
 /// See [root.modules.script.name](#root.modules.script.name).
 pub fn getScript(self: *Object, P: type, name: []const u8) ?*P {
-    for (self._scripts.items) |script| {
+    for (self._scripts.items) |*script| {
         if (std.mem.eql(u8, script.name, name)) {
             return @as(
                 *P,
