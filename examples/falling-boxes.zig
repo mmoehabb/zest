@@ -13,7 +13,7 @@ pub fn main(init: std.process.Init) !void {
     );
     var box_drawable = rect.toDrawable();
 
-    var boxes = [_]?*Box{null} ** 50;
+    var boxes = [_]?*Box{null} ** 5;
 
     const rng_impl: std.Random.IoSource = .{ .io = init.io };
     const rng = rng_impl.interface();
@@ -26,7 +26,7 @@ pub fn main(init: std.process.Init) !void {
             &box_drawable,
             "Box",
             .{
-                .x = 320.0 * rand1,
+                .x = 300.0 * rand1,
                 .y = 200.0 * rand2,
             },
         );
@@ -57,7 +57,16 @@ pub fn main(init: std.process.Init) !void {
     };
     var terrain_mesh = try zigsdl.scripts.Mesh.init(allocator, &terrain_faces);
     defer terrain_mesh.deinit();
+
+    var terrain_rigidbody = try zigsdl.scripts.Rigidbody.init(.{
+        .allocator = allocator,
+        .mass = 500,
+        .static = true,
+    });
+    defer terrain_rigidbody.deinit();
+
     try terrain.addScript(terrain_mesh.toScript());
+    try terrain.addScript(terrain_rigidbody.toScript());
 
     // Create a scene and add the obj into it
     var scene = zigsdl.modules.Scene.init(allocator);
@@ -114,7 +123,12 @@ const Box = struct {
         try box._obj.addScript(box_mesh.toScript());
         box._mesh = box_mesh;
 
-        var box_rigidbody = try zigsdl.scripts.Rigidbody.init(allocator, 5, true);
+        var box_rigidbody = try zigsdl.scripts.Rigidbody.init(.{
+            .allocator = allocator,
+            .mass = 5,
+            .gravity = true,
+            .static = false,
+        });
         try box._obj.addScript(box_rigidbody.toScript());
         box._rigidbody = box_rigidbody;
 

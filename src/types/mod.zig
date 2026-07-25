@@ -5,3 +5,4 @@ pub const Position = @import("position.zig");
 pub const Rotation = @import("rotation.zig");
 pub const LifeCycle = @import("life-cycle.zig");
 pub const Face = @import("face.zig");
+pub const Collision = @import("collision.zig");

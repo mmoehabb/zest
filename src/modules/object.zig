@@ -37,6 +37,7 @@ _allocator: std.mem.Allocator,
 _scene: ?*Scene = null,
 _parent: ?*Object = null,
 _scripts: std.ArrayList(Script) = .empty,
+_scripts_memo: std.StringHashMap(*Script),
 _children: std.ArrayList(*Object) = .empty,
 _active: bool,
 
@@ -59,6 +60,7 @@ pub fn init(
         .drawable = props.drawable,
         ._active = props.active,
         ._allocator = allocator,
+        ._scripts_memo = std.StringHashMap(*Script).init(allocator),
     };
 }
 
@@ -68,6 +70,7 @@ pub fn deinit(self: *Object) void {
     self._active = false;
     if (self.drawable) |d| d.destroy();
 
+    self._scripts_memo.deinit();
     for (self._scripts.items) |*script| script.end(self);
     self._scripts.deinit(self._allocator);
 
@@ -156,18 +159,31 @@ pub fn addScript(self: *Object, script: Script) !void {
 /// By convention, the name of any script should equal exactly the name of the type.
 /// See [root.modules.script.name](#root.modules.script.name).
 pub fn getScript(self: *Object, P: type, name: []const u8) ?*P {
+    if (self._scripts_memo.get(name)) |found| {
+        return @as(
+            *P,
+            @constCast(@fieldParentPtr(
+                "_script_strategy",
+                found.strategy,
+            )),
+        );
+    }
+
+    var found: ?*P = null;
     for (self._scripts.items) |*script| {
         if (std.mem.eql(u8, script.name, name)) {
-            return @as(
+            found = @as(
                 *P,
                 @constCast(@fieldParentPtr(
                     "_script_strategy",
                     script.strategy,
                 )),
             );
+            self._scripts_memo.put(name, script) catch {};
+            break;
         }
     }
-    return null;
+    return found;
 }
 
 pub fn setScene(self: *Object, scene: *Scene) void {

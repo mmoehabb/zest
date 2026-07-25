@@ -59,22 +59,44 @@ pub fn isPCP(self: Face, p: Position) bool {
     return @floor(v.x) + @floor(v.y) + @floor(v.z) == 0;
 }
 
-/// Return an alternative face where the closed point to _p_ is
-/// substituted with _p_.
-pub fn getAlter(self: Face, p: Position) Face {
-    const face = self.add(self.owner.position);
-
-    const l1 = face.p1.subtract(p).magnitude();
-    const l2 = face.p2.subtract(p).magnitude();
-    const l3 = face.p3.subtract(p).magnitude();
-    const l4 = face.p4.subtract(p).magnitude();
+pub fn closestVertexTo(self: Face, p: Position) Position {
+    const l1 = self.p1.subtract(p).magnitude();
+    const l2 = self.p2.subtract(p).magnitude();
+    const l3 = self.p3.subtract(p).magnitude();
+    const l4 = self.p4.subtract(p).magnitude();
     const m = @min(l1, l2, l3, l4);
 
+    if (m == l1) return self.p1;
+    if (m == l2) return self.p2;
+    if (m == l3) return self.p3;
+    if (m == l4) return self.p4;
+
+    unreachable;
+}
+
+/// Return an alternative face where the face closest point to _p_ is
+/// substituted with _p_.
+pub fn getAlter(self: Face, p: Position) Face {
+    const closest = self.closestVertexTo(p);
+    return self.replaceVertexWith(closest, p);
+}
+
+/// Return a cloned Face where _v_ is substituted with _p_.
+pub fn replaceVertexWith(self: Face, v: Position, p: Position) Face {
     return .{
-        .p1 = if (m != l1) self.p1 else p,
-        .p2 = if (m != l2) self.p2 else p,
-        .p3 = if (m != l3) self.p3 else p,
-        .p4 = if (m != l4) self.p4 else p,
+        .p1 = if (!v.isEql(self.p1)) self.p1 else p,
+        .p2 = if (!v.isEql(self.p2)) self.p2 else p,
+        .p3 = if (!v.isEql(self.p3)) self.p3 else p,
+        .p4 = if (!v.isEql(self.p4)) self.p4 else p,
         .owner = self.owner,
     };
+}
+
+/// Returns true if point _p_ falls within (or on) the face.
+pub fn contains(self: *Face, p: Position) bool {
+    const absFace = self.add(self.owner.position);
+    if (!absFace.isPCP(p)) return false;
+    const origCircum = absFace.calCircum();
+    const altCircum = absFace.getAlter(p).calCircum();
+    return altCircum <= origCircum;
 }
