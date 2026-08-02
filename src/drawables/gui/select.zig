@@ -2,7 +2,7 @@
 //! currently selected option; clicking it opens a dropdown panel of all options.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
 const types = @import("../../types/mod.zig");
 
@@ -34,9 +34,9 @@ _open: bool = false,
 _hover_option: ?usize = null,
 _prev_mouse_down_inside_trigger: bool = false,
 _prev_mouse_down_inside_dropdown: bool = false,
-_trigger_texture: ?[*c]sdl.c.SDL_Texture = null,
+_trigger_texture: ?[*c]sdl.SDL_Texture = null,
 _last_trigger_text: []const u8 = "",
-_option_textures: std.ArrayList(?[*c]sdl.c.SDL_Texture) = .empty,
+_option_textures: std.ArrayList(?[*c]sdl.SDL_Texture) = .empty,
 _built: bool = false,
 
 _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
@@ -77,52 +77,52 @@ pub fn getSelected(self: *Select) ?[]const u8 {
     return null;
 }
 
-fn fillRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
-    const fc: sdl.c.SDL_FColor = .{
+fn fillRect(renderer: *sdl.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
+    const fc: sdl.SDL_FColor = .{
         .r = @floatFromInt(color.r),
         .g = @floatFromInt(color.g),
         .b = @floatFromInt(color.b),
         .a = @floatFromInt(color.a),
     };
-    const verts = [_]sdl.c.SDL_Vertex{
+    const verts = [_]sdl.SDL_Vertex{
         .{ .position = .{ .x = x, .y = y }, .color = fc },
         .{ .position = .{ .x = x, .y = y + h }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y + h }, .color = fc },
     };
     const indices = [_]c_int{ 0, 1, 2, 2, 1, 3 };
-    if (!sdl.c.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
-        sdl.c.SDL_Log("Select: unable to render geometry: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
+        sdl.SDL_Log("Select: unable to render geometry: %s", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 }
 
-fn strokeRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color, t: f32) !void {
+fn strokeRect(renderer: *sdl.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color, t: f32) !void {
     try fillRect(renderer, x, y, w, t, color);
     try fillRect(renderer, x, y + h - t, w, t, color);
     try fillRect(renderer, x, y, t, h, color);
     try fillRect(renderer, x + w - t, y, t, h, color);
 }
 
-fn renderText(renderer: *sdl.c.SDL_Renderer, font_path: []const u8, font_size: f32, str: []const u8, color: types.Color) ![*c]sdl.c.SDL_Texture {
-    const font = sdl.c.TTF_OpenFont(font_path.ptr, font_size);
+fn renderText(renderer: *sdl.SDL_Renderer, font_path: []const u8, font_size: f32, str: []const u8, color: types.Color) ![*c]sdl.SDL_Texture {
+    const font = sdl.TTF_OpenFont(font_path.ptr, font_size);
     if (font == null) return error.RenderFailed;
-    defer sdl.c.TTF_CloseFont(font);
-    const surface = sdl.c.TTF_RenderText_Blended(font, str.ptr, str.len, sdl.c.SDL_Color{
+    defer sdl.TTF_CloseFont(font);
+    const surface = sdl.TTF_RenderText_Blended(font, str.ptr, str.len, sdl.SDL_Color{
         .a = color.a,
         .b = color.b,
         .g = color.g,
         .r = color.r,
     });
     if (surface == null) return error.RenderFailed;
-    defer sdl.c.SDL_DestroySurface(surface);
-    const tex = sdl.c.SDL_CreateTextureFromSurface(renderer, surface);
+    defer sdl.SDL_DestroySurface(surface);
+    const tex = sdl.SDL_CreateTextureFromSurface(renderer, surface);
     if (tex == null) return error.RenderFailed;
-    _ = sdl.c.SDL_SetTextureScaleMode(tex, sdl.c.SDL_SCALEMODE_LINEAR);
+    _ = sdl.SDL_SetTextureScaleMode(tex, sdl.SDL_SCALEMODE_LINEAR);
     return tex;
 }
 
-fn buildOptionTextures(self: *Select, renderer: *sdl.c.SDL_Renderer) !void {
+fn buildOptionTextures(self: *Select, renderer: *sdl.SDL_Renderer) !void {
     while (self._option_textures.items.len < self.options.len) {
         self._option_textures.append(self._allocator, null) catch return error.RenderFailed;
     }
@@ -143,7 +143,7 @@ fn buildOptionTextures(self: *Select, renderer: *sdl.c.SDL_Renderer) !void {
 fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     _: types.Rotation,
     dim: types.Dimensions,
@@ -233,7 +233,7 @@ fn draw(
 
     const trigger_text: []const u8 = if (self.getSelected()) |s| s else "Select...";
     if (self._trigger_texture == null or !std.mem.eql(u8, self._last_trigger_text, trigger_text)) {
-        if (self._trigger_texture) |t| sdl.c.SDL_DestroyTexture(t);
+        if (self._trigger_texture) |t| sdl.SDL_DestroyTexture(t);
         self._trigger_texture = try renderText(
             renderer,
             self.font_path,
@@ -246,27 +246,27 @@ fn draw(
 
     if (self._trigger_texture) |t| {
         const th: f32 = @floatFromInt(t.*.h);
-        const dest = sdl.c.SDL_FRect{
+        const dest = sdl.SDL_FRect{
             .x = pos.x + 6,
             .y = pos.y + (dim.h - th) / 2,
             .w = @floatFromInt(t.*.w),
             .h = th,
         };
-        if (!sdl.c.SDL_RenderTexture(renderer, t, null, &dest)) return error.RenderFailed;
+        if (!sdl.SDL_RenderTexture(renderer, t, null, &dest)) return error.RenderFailed;
     }
 
     const arrow_size: f32 = @min(dim.w, dim.h) * 0.25;
     const arrow_cx = pos.x + dim.w - arrow_size - 6;
     const arrow_cy = pos.y + dim.h / 2;
-    _ = sdl.c.SDL_SetRenderDrawColor(renderer, self.text_color.r, self.text_color.g, self.text_color.b, self.text_color.a);
-    if (!sdl.c.SDL_RenderLine(
+    _ = sdl.SDL_SetRenderDrawColor(renderer, self.text_color.r, self.text_color.g, self.text_color.b, self.text_color.a);
+    if (!sdl.SDL_RenderLine(
         renderer,
         arrow_cx - arrow_size / 2,
         arrow_cy - arrow_size / 4,
         arrow_cx,
         arrow_cy + arrow_size / 4,
     )) return error.RenderFailed;
-    if (!sdl.c.SDL_RenderLine(
+    if (!sdl.SDL_RenderLine(
         renderer,
         arrow_cx,
         arrow_cy + arrow_size / 4,
@@ -291,13 +291,13 @@ fn draw(
             if (i < self._option_textures.items.len) {
                 if (self._option_textures.items[i]) |tex| {
                     const th: f32 = @floatFromInt(tex.*.h);
-                    const dest = sdl.c.SDL_FRect{
+                    const dest = sdl.SDL_FRect{
                         .x = pos.x + 6,
                         .y = oy + (dim.h - th) / 2,
                         .w = @floatFromInt(tex.*.w),
                         .h = th,
                     };
-                    if (!sdl.c.SDL_RenderTexture(renderer, tex, null, &dest)) return error.RenderFailed;
+                    if (!sdl.SDL_RenderTexture(renderer, tex, null, &dest)) return error.RenderFailed;
                 }
             }
         }
@@ -306,9 +306,9 @@ fn draw(
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*Select, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._trigger_texture) |t| sdl.c.SDL_DestroyTexture(t);
+    if (self._trigger_texture) |t| sdl.SDL_DestroyTexture(t);
     for (self._option_textures.items) |maybe_t| {
-        if (maybe_t) |t| sdl.c.SDL_DestroyTexture(t);
+        if (maybe_t) |t| sdl.SDL_DestroyTexture(t);
     }
     self._option_textures.deinit(self._allocator);
 }

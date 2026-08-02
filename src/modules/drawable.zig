@@ -1,7 +1,7 @@
 //! This module contains structs to define and implement drawables.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const types = @import("../types/mod.zig");
 
 /// This component is the key to customize/extend the behavior of drawables.
@@ -32,7 +32,7 @@ pub const DrawStrategy = struct {
     draw: *const fn (
         _: *Drawable,
         _: *const DrawStrategy,
-        _: *sdl.c.SDL_Renderer,
+        _: *sdl.SDL_Renderer,
         _: types.Position,
         _: types.Rotation,
         _: types.Dimensions,
@@ -69,11 +69,11 @@ pub const Drawable = struct {
     /// This should only be called by [the object component](#root.modules.object.Object).
     pub fn draw(
         self: *Drawable,
-        renderer: *sdl.c.SDL_Renderer,
+        renderer: *sdl.SDL_Renderer,
         pos: types.Position,
         rot: types.Rotation,
     ) !void {
-        if (self.color) |color| _ = sdl.c.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        if (self.color) |color| _ = sdl.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         try self.drawStrategy.draw(self, self.drawStrategy, renderer, pos, rot, self.dim.getScaled());
     }
 

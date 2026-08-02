@@ -13,7 +13,7 @@ pub fn main(init: std.process.Init) !void {
     );
     var box_drawable = rect.toDrawable();
 
-    var boxes = [_]?*Box{null} ** 5;
+    var boxes: [5]?*Box = @splat(null);
 
     const rng_impl: std.Random.IoSource = .{ .io = init.io };
     const rng = rng_impl.interface();
@@ -44,7 +44,6 @@ pub fn main(init: std.process.Init) !void {
         .rotation = .{ .x = 0, .y = 0 },
         .drawable = &terrain_drawable,
     });
-    defer terrain.deinit();
 
     var terrain_faces = [_]zigsdl.types.Face{
         .{
@@ -67,6 +66,7 @@ pub fn main(init: std.process.Init) !void {
 
     try terrain.addScript(terrain_mesh.toScript());
     try terrain.addScript(terrain_rigidbody.toScript());
+    defer terrain.deinit();
 
     // Create a scene and add the obj into it
     var scene = zigsdl.modules.Scene.init(allocator);

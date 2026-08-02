@@ -2,7 +2,7 @@
 //! and SDL_RenderLine for the check mark.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
 const types = @import("../../types/mod.zig");
 
@@ -47,22 +47,22 @@ pub fn toDrawable(self: *CheckBox) modules.Drawable {
     };
 }
 
-fn fillRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
-    const fc: sdl.c.SDL_FColor = .{
+fn fillRect(renderer: *sdl.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
+    const fc: sdl.SDL_FColor = .{
         .r = @floatFromInt(color.r),
         .g = @floatFromInt(color.g),
         .b = @floatFromInt(color.b),
         .a = @floatFromInt(color.a),
     };
-    const verts = [_]sdl.c.SDL_Vertex{
+    const verts = [_]sdl.SDL_Vertex{
         .{ .position = .{ .x = x, .y = y }, .color = fc },
         .{ .position = .{ .x = x, .y = y + h }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y + h }, .color = fc },
     };
     const indices = [_]c_int{ 0, 1, 2, 2, 1, 3 };
-    if (!sdl.c.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
-        sdl.c.SDL_Log("CheckBox: unable to render geometry: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
+        sdl.SDL_Log("CheckBox: unable to render geometry: %s", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 }
@@ -70,7 +70,7 @@ fn fillRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color
 fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     _: types.Rotation,
     dim: types.Dimensions,
@@ -107,20 +107,20 @@ fn draw(
     try fillRect(renderer, pos.x, pos.y, dim.w, dim.h, fill);
 
     if (self.checked) {
-        _ = sdl.c.SDL_SetRenderDrawColor(
+        _ = sdl.SDL_SetRenderDrawColor(
             renderer,
             self.check_color.r,
             self.check_color.g,
             self.check_color.b,
             self.check_color.a,
         );
-        const a = sdl.c.SDL_FPoint{ .x = pos.x + dim.w * 0.22, .y = pos.y + dim.h * 0.55 };
-        const b = sdl.c.SDL_FPoint{ .x = pos.x + dim.w * 0.45, .y = pos.y + dim.h * 0.80 };
-        const c = sdl.c.SDL_FPoint{ .x = pos.x + dim.w * 0.80, .y = pos.y + dim.h * 0.28 };
-        if (!sdl.c.SDL_RenderLine(renderer, a.x, a.y, b.x, b.y)) {
+        const a = sdl.SDL_FPoint{ .x = pos.x + dim.w * 0.22, .y = pos.y + dim.h * 0.55 };
+        const b = sdl.SDL_FPoint{ .x = pos.x + dim.w * 0.45, .y = pos.y + dim.h * 0.80 };
+        const c = sdl.SDL_FPoint{ .x = pos.x + dim.w * 0.80, .y = pos.y + dim.h * 0.28 };
+        if (!sdl.SDL_RenderLine(renderer, a.x, a.y, b.x, b.y)) {
             return error.RenderFailed;
         }
-        if (!sdl.c.SDL_RenderLine(renderer, b.x, b.y, c.x, c.y)) {
+        if (!sdl.SDL_RenderLine(renderer, b.x, b.y, c.x, c.y)) {
             return error.RenderFailed;
         }
     }

@@ -5,15 +5,27 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Declare and add the module
+    const sdl_c = b.addTranslateC(.{
+        .root_source_file = b.path("src/sdl.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+    sdl_c.linkSystemLibrary("SDL3", .{ .needed = true });
+    sdl_c.linkSystemLibrary("SDL3_ttf", .{ .needed = true });
+    sdl_c.linkSystemLibrary("SDL3_image", .{ .needed = true });
+    sdl_c.link_libc = true;
+
     const zigsdl = b.addModule("zigsdl", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{
+                .name = "sdl",
+                .module = sdl_c.createModule(),
+            },
+        },
     });
-    zigsdl.linkSystemLibrary("SDL3", .{ .needed = true });
-    zigsdl.linkSystemLibrary("SDL3_ttf", .{ .needed = true });
-    zigsdl.linkSystemLibrary("SDL3_image", .{ .needed = true });
-    zigsdl.link_libc = true;
 
     // ************************************************
     // **** Add the examples files as executables *****

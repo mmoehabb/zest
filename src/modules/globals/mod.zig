@@ -4,7 +4,7 @@
 //! these global variables.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 
 const StringFactory = @import("./string-factory.zig");
 const EventManager = @import("./event-manager.zig");
@@ -16,7 +16,7 @@ var eventManager: ?EventManager = null;
 var audioManager: ?AudioManager = null;
 var phyzxEngine: ?PhyzxEngine = null;
 
-var activeWindow: ?*sdl.c.SDL_Window = null;
+var activeWindow: ?*sdl.SDL_Window = null;
 
 var initialized = false;
 
@@ -40,12 +40,12 @@ pub fn isInitialized() bool {
     return initialized;
 }
 
-pub fn setActiveWindow(window: ?*sdl.c.SDL_Window) void {
+pub fn setActiveWindow(window: ?*sdl.SDL_Window) void {
     activeWindow = window;
 }
 
 pub fn getAll() struct {
-    activeWindow: ?*sdl.c.SDL_Window,
+    activeWindow: ?*sdl.SDL_Window,
     stringFactory: *StringFactory,
     eventManager: *EventManager,
     audioManager: *AudioManager,

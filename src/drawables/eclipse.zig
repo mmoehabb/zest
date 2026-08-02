@@ -2,7 +2,7 @@
 //! NOTE: this is a simple wrapper on the SVG component.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 const SVG = @import("./svg.zig");

@@ -5,7 +5,7 @@
 //! a container of a drawable, or all the three together.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const types = @import("../types/mod.zig");
 
 const Scene = @import("./scene.zig");
@@ -91,7 +91,7 @@ pub fn start(self: *Object) !void {
 }
 
 /// This method shall only be invoked via the scene.
-pub fn update(self: *Object, renderer: *sdl.c.SDL_Renderer) !void {
+pub fn update(self: *Object, renderer: *sdl.SDL_Renderer) !void {
     if (!self._active) return;
     if (self.lifecycle.preUpdate) |func| func(self);
     for (self._scripts.items) |*script| script.update(self);

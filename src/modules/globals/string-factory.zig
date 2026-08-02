@@ -194,8 +194,9 @@ test "Should extend buffer when string exceeds PAGE_SIZE" {
     var factory = try StringFactory.init(allocator);
     defer factory.deinit();
 
-    const large = try factory.create("A" ** 1500);
-    try expect(std.mem.eql(u8, "A" ** 1500, large.read()));
+    const str: [1500]u8 = @splat('A');
+    const large = try factory.create(&str);
+    try expect(std.mem.eql(u8, &str, large.read()));
 }
 
 test "Should extend buffer multiple times" {
@@ -205,13 +206,17 @@ test "Should extend buffer multiple times" {
     var factory = try StringFactory.init(allocator);
     defer factory.deinit();
 
-    const a = try factory.create("A" ** 1024);
-    const b = try factory.create("B" ** 1024);
-    const c = try factory.create("C" ** 1024);
+    const strA: [1024]u8 = @splat('A');
+    const strB: [1024]u8 = @splat('B');
+    const strC: [1024]u8 = @splat('C');
 
-    try expect(std.mem.eql(u8, "A" ** 1024, a.read()));
-    try expect(std.mem.eql(u8, "B" ** 1024, b.read()));
-    try expect(std.mem.eql(u8, "C" ** 1024, c.read()));
+    const a = try factory.create(&strA);
+    const b = try factory.create(&strB);
+    const c = try factory.create(&strC);
+
+    try expect(std.mem.eql(u8, &strA, a.read()));
+    try expect(std.mem.eql(u8, &strB, b.read()));
+    try expect(std.mem.eql(u8, &strC, c.read()));
 }
 
 test "getOrCreate should return existing string" {

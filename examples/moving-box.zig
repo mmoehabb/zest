@@ -7,13 +7,18 @@ pub fn main(init: std.process.Init) !void {
     try zigsdl.modules.Globals.init(allocator, init.io);
     defer zigsdl.modules.Globals.deinit();
 
-    // Create a drawable object
+    // Define Rect Drawable
     var rect = zigsdl.drawables.Rect.new(
         .{ .w = 20, .h = 20, .d = 1 },
         .{ .g = 255 },
     );
     var rect_drawable = rect.toDrawable();
 
+    // Define movement script
+    var movement = try zigsdl.scripts.Movement.init(allocator, 5, true);
+    defer movement.deinit();
+
+    // Create the Object
     var obj = zigsdl.modules.Object.init(allocator, .{
         .name = "GreenBox",
         .position = .{ .x = 20, .y = 20, .z = 1 },
@@ -21,10 +26,6 @@ pub fn main(init: std.process.Init) !void {
         .drawable = &rect_drawable,
     });
     defer obj.deinit();
-
-    // Add movement script to the object
-    var movement = try zigsdl.scripts.Movement.init(allocator, 5, true);
-    defer movement.deinit();
     try obj.addScript(movement.toScript());
 
     // Add a child object to obj

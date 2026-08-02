@@ -46,7 +46,7 @@ exe.root_module.addImport("zigsdl", zigsdl_mod);
 
 First ensure to install SDL3 on your machine, and Zig of course. Choose any example file in the examples directory, and then run it with the following command:
 
-> Note: compatible only with zig versions ^0.16.0
+> Note: compatible only with zig versions ^0.17.0
 
   ```bash
   zig build example:<example-filename>

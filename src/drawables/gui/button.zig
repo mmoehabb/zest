@@ -2,7 +2,7 @@
 //! background and SDL_TTF for the label.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
 const types = @import("../../types/mod.zig");
 
@@ -24,7 +24,7 @@ on_click: ?*const fn (self: *Button) void = null,
 
 _state: State = .Idle,
 _prev_mouse_down: bool = false,
-_texture: ?[*c]sdl.c.SDL_Texture = null,
+_texture: ?[*c]sdl.SDL_Texture = null,
 _last_label: []const u8 = "",
 _last_color: types.Color = .{},
 
@@ -60,8 +60,8 @@ pub fn setLabel(self: *Button, label: []const u8) void {
     self._texture = null;
 }
 
-fn fillRect(renderer: *sdl.c.SDL_Renderer, pos: types.Position, dim: types.Dimensions, color: types.Color) !void {
-    const fc: sdl.c.SDL_FColor = .{
+fn fillRect(renderer: *sdl.SDL_Renderer, pos: types.Position, dim: types.Dimensions, color: types.Color) !void {
+    const fc: sdl.SDL_FColor = .{
         .r = @floatFromInt(color.r),
         .g = @floatFromInt(color.g),
         .b = @floatFromInt(color.b),
@@ -73,28 +73,28 @@ fn fillRect(renderer: *sdl.c.SDL_Renderer, pos: types.Position, dim: types.Dimen
         .y = pos.y + (dim.h / 2),
     };
 
-    const pa = sdl.c.SDL_Vertex{
+    const pa = sdl.SDL_Vertex{
         .position = .{ .x = pos.x, .y = pos.y },
         .color = fc,
     };
-    const pb = sdl.c.SDL_Vertex{
+    const pb = sdl.SDL_Vertex{
         .position = .{ .x = pos.x, .y = pos.y + dim.h },
         .color = fc,
     };
-    const pc = sdl.c.SDL_Vertex{
+    const pc = sdl.SDL_Vertex{
         .position = .{ .x = pos.x + dim.w, .y = pos.y },
         .color = fc,
     };
-    const pd = sdl.c.SDL_Vertex{
+    const pd = sdl.SDL_Vertex{
         .position = .{ .x = pos.x + dim.w, .y = pos.y + dim.h },
         .color = fc,
     };
-    const verts = [_]sdl.c.SDL_Vertex{ pa, pb, pc, pd };
+    const verts = [_]sdl.SDL_Vertex{ pa, pb, pc, pd };
     const indices = [_]c_int{ 0, 1, 2, 2, 1, 3 };
 
     _ = center;
-    if (!sdl.c.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
-        sdl.c.SDL_Log("Button: unable to render geometry: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
+        sdl.SDL_Log("Button: unable to render geometry: %s", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 }
@@ -102,7 +102,7 @@ fn fillRect(renderer: *sdl.c.SDL_Renderer, pos: types.Position, dim: types.Dimen
 fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     _: types.Rotation,
     dim: types.Dimensions,
@@ -142,21 +142,21 @@ fn draw(
         !std.mem.eql(u8, self._last_label, self.label) or
         !std.meta.eql(self._last_color, self.text_color);
     if (text_changed) {
-        if (self._texture) |t| sdl.c.SDL_DestroyTexture(t);
-        const font = sdl.c.TTF_OpenFont(self.font_path.ptr, self.font_size);
+        if (self._texture) |t| sdl.SDL_DestroyTexture(t);
+        const font = sdl.TTF_OpenFont(self.font_path.ptr, self.font_size);
         if (font == null) return error.RenderFailed;
-        defer sdl.c.TTF_CloseFont(font);
-        const surface = sdl.c.TTF_RenderText_Blended(font, self.label.ptr, self.label.len, sdl.c.SDL_Color{
+        defer sdl.TTF_CloseFont(font);
+        const surface = sdl.TTF_RenderText_Blended(font, self.label.ptr, self.label.len, sdl.SDL_Color{
             .a = self.text_color.a,
             .b = self.text_color.b,
             .g = self.text_color.g,
             .r = self.text_color.r,
         });
         if (surface == null) return error.RenderFailed;
-        defer sdl.c.SDL_DestroySurface(surface);
-        self._texture = sdl.c.SDL_CreateTextureFromSurface(renderer, surface);
+        defer sdl.SDL_DestroySurface(surface);
+        self._texture = sdl.SDL_CreateTextureFromSurface(renderer, surface);
         if (self._texture) |tex| {
-            _ = sdl.c.SDL_SetTextureScaleMode(tex, sdl.c.SDL_SCALEMODE_LINEAR);
+            _ = sdl.SDL_SetTextureScaleMode(tex, sdl.SDL_SCALEMODE_LINEAR);
         } else return error.RenderFailed;
         self._last_label = self.label;
         self._last_color = self.text_color;
@@ -165,13 +165,13 @@ fn draw(
     if (self._texture) |t| {
         const tw: f32 = @floatFromInt(t.*.w);
         const th: f32 = @floatFromInt(t.*.h);
-        const dest = sdl.c.SDL_FRect{
+        const dest = sdl.SDL_FRect{
             .x = pos.x + (dim.w - tw) / 2,
             .y = pos.y + (dim.h - th) / 2,
             .w = tw,
             .h = th,
         };
-        if (!sdl.c.SDL_RenderTexture(renderer, t, null, &dest)) {
+        if (!sdl.SDL_RenderTexture(renderer, t, null, &dest)) {
             return error.RenderFailed;
         }
     }
@@ -179,5 +179,5 @@ fn draw(
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*Button, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._texture) |t| sdl.c.SDL_DestroyTexture(t);
+    if (self._texture) |t| sdl.SDL_DestroyTexture(t);
 }

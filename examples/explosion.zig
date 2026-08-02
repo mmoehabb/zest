@@ -16,12 +16,20 @@ pub fn main(init: std.process.Init) !void {
     });
     var idle_drawable = idle.toDrawable(.{ .w = 120, .h = 150, .d = 1 }, .{});
 
+    var audioPlayer = try zigsdl.scripts.AudioPlayer.init(
+        allocator,
+        "./examples/assets/explosion.wav",
+        false,
+    );
+    defer audioPlayer.deinit();
+
     var obj = zigsdl.modules.Object.init(allocator, .{
         .position = .{ .x = 100, .y = 20, .z = 1 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
         .drawable = &idle_drawable,
     });
     defer obj.deinit();
+    try obj.addScript(audioPlayer.toScript());
 
     // Create text object
     var text = zigsdl.drawables.GUI.Text.new(.{
@@ -37,15 +45,6 @@ pub fn main(init: std.process.Init) !void {
         .drawable = &text_drawable,
     });
     defer obj2.deinit();
-
-    // Add audioPlayer script to obj
-    var audioPlayer = try zigsdl.scripts.AudioPlayer.init(
-        allocator,
-        "./examples/assets/explosion.wav",
-        false,
-    );
-    defer audioPlayer.deinit();
-    try obj.addScript(audioPlayer.toScript());
 
     // Extend the update function in the obj so that
     // the drawable changes to explode and the audio plays

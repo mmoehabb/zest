@@ -2,7 +2,7 @@
 //! [https://wiki.libsdl.org/SDL3/CategoryAudio](https://wiki.libsdl.org/SDL3/CategoryAudio).
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 
@@ -18,7 +18,7 @@ _volume: f32 = 1.0,
 
 /// Audio file specifications like: number of channels, format, and frequency.
 /// It gets loaded by SDL_LoadWAV function.
-_audio_spec: sdl.c.SDL_AudioSpec = .{},
+_audio_spec: sdl.SDL_AudioSpec = .{},
 
 /// The audio stream buffer; it gets loaded by SDL_LoadWAV function.
 _audio_buf: [*c]u8 = null,
@@ -73,13 +73,13 @@ pub fn toScript(self: *AudioPlayer) modules.Script {
 
 pub fn loadWAV(self: *AudioPlayer, path: []const u8) void {
     self.wav_path = path;
-    if (!sdl.c.SDL_LoadWAV(
+    if (!sdl.SDL_LoadWAV(
         self.wav_path.ptr,
         &self._audio_spec,
         &self._audio_buf,
         &self._audio_buf_len,
     )) {
-        std.log.err("{s}\n", .{sdl.c.SDL_GetError()});
+        std.log.err("{s}\n", .{sdl.SDL_GetError()});
         return;
     }
     self._audio_dur = self.getAudioDur();
@@ -94,13 +94,13 @@ pub fn play(self: *AudioPlayer) !modules.AudioStream {
 
 /// 1.0 volume is equivalent to 100%.
 pub fn setVolume(self: *AudioPlayer, volume: f32) void {
-    if (!sdl.c.SDL_MixAudio(
+    if (!sdl.SDL_MixAudio(
         self._audio_buf,
         self._audio_buf,
         self._audio_spec.format,
         self._audio_buf_len,
         volume - self._volume,
-    )) std.log.warn("AudioPlayer: {s}\n", .{sdl.c.SDL_GetError()});
+    )) std.log.warn("AudioPlayer: {s}\n", .{sdl.SDL_GetError()});
     self._volume = volume;
 }
 
@@ -110,13 +110,13 @@ fn start(s: *modules.Script, _: *modules.Object) void {
         @constCast(@fieldParentPtr("_script_strategy", s.strategy)),
     );
 
-    if (!sdl.c.SDL_LoadWAV(
+    if (!sdl.SDL_LoadWAV(
         self.wav_path.ptr,
         &self._audio_spec,
         &self._audio_buf,
         &self._audio_buf_len,
     )) {
-        std.log.err("{s}\n", .{sdl.c.SDL_GetError()});
+        std.log.err("{s}\n", .{sdl.SDL_GetError()});
         return;
     }
 
@@ -130,11 +130,11 @@ fn end(s: *modules.Script, _: *modules.Object) void {
         *AudioPlayer,
         @constCast(@fieldParentPtr("_script_strategy", s.strategy)),
     );
-    sdl.c.SDL_free(self._audio_buf);
+    sdl.SDL_free(self._audio_buf);
 }
 
 fn getAudioDur(self: *AudioPlayer) u32 {
-    const sample_size = sdl.c.SDL_AUDIO_BITSIZE(self._audio_spec.format) / 8;
+    const sample_size = sdl.SDL_AUDIO_BITSIZE(self._audio_spec.format) / 8;
     const total_samples = self._audio_buf_len / sample_size;
     const sample_per_channel = total_samples / @as(u32, @intCast(self._audio_spec.channels));
     return sample_per_channel / @as(u32, @intCast(self._audio_spec.freq));

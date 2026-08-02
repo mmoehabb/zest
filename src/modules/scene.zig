@@ -3,7 +3,7 @@
 //! invoking the [setScreen](#root.modules.scene.setScreen) method.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 
 const Screen = @import("./screen.zig");
 const Object = @import("./object.zig");
@@ -54,7 +54,7 @@ pub fn start(self: *Scene) !void {
 }
 
 /// This ought to be invoked by the [screen](#root.modules.screen).
-pub fn update(self: *Scene, renderer: *sdl.c.SDL_Renderer) !void {
+pub fn update(self: *Scene, renderer: *sdl.SDL_Renderer) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
     for (self._objects.items) |obj| try obj.update(renderer);
     if (self.lifecycle.postUpdate) |func| func(self);

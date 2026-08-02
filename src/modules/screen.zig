@@ -1,7 +1,7 @@
 //! This component can be considered as a collection of scenes.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 
 const Globals = @import("globals/mod.zig");
 const EventManager = @import("globals/event-manager.zig");
@@ -26,8 +26,8 @@ rate: u32,
 lifecycle: *const types.LifeCycle = &types.LifeCycle{},
 
 _scene: ?*Scene = null,
-_window: ?*sdl.c.SDL_Window = null,
-_renderer: ?*sdl.c.SDL_Renderer = null,
+_window: ?*sdl.SDL_Window = null,
+_renderer: ?*sdl.SDL_Renderer = null,
 _opened: bool = false,
 _em: *EventManager,
 
@@ -58,34 +58,34 @@ pub fn deinit(self: *Screen) void {
 pub fn open(self: *Screen) !void {
     if (self.lifecycle.preOpen) |func| func(self);
 
-    if (!sdl.c.SDL_Init(sdl.c.SDL_INIT_VIDEO)) {
-        sdl.c.SDL_Log("Unable to initialize SDL Video: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_Init(sdl.SDL_INIT_VIDEO)) {
+        sdl.SDL_Log("Unable to initialize SDL Video: %s", sdl.SDL_GetError());
         return error.SDLInitializationFailed;
     }
 
-    if (!sdl.c.SDL_Init(sdl.c.SDL_INIT_AUDIO)) {
-        sdl.c.SDL_Log("Unable to initialize SDL Audio: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_Init(sdl.SDL_INIT_AUDIO)) {
+        sdl.SDL_Log("Unable to initialize SDL Audio: %s", sdl.SDL_GetError());
     }
 
-    if (!sdl.c.TTF_Init()) {
+    if (!sdl.TTF_Init()) {
         return error.TTFInitializationFailed;
     }
 
-    self._window = sdl.c.SDL_CreateWindow(
+    self._window = sdl.SDL_CreateWindow(
         self.title.ptr,
         self.width,
         self.height,
-        sdl.c.SDL_WINDOW_OPENGL,
+        sdl.SDL_WINDOW_OPENGL,
     ) orelse {
-        sdl.c.SDL_Log("Unable to create window: %s", sdl.c.SDL_GetError());
+        sdl.SDL_Log("Unable to create window: %s", sdl.SDL_GetError());
         return error.SDLInitializationFailed;
     };
 
     Globals.setActiveWindow(self._window); // TODO: This should be handled in the event-manager. Or at least, by using it.
     try Globals.getAll().phyzxEngine.start();
 
-    self._renderer = sdl.c.SDL_CreateRenderer(self._window, null) orelse {
-        sdl.c.SDL_Log("Unable to create renderer: %s", sdl.c.SDL_GetError());
+    self._renderer = sdl.SDL_CreateRenderer(self._window, null) orelse {
+        sdl.SDL_Log("Unable to create renderer: %s", sdl.SDL_GetError());
         return error.SDLInitializationFailed;
     };
 
@@ -101,16 +101,16 @@ fn update(self: *Screen) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
 
     const event = try self._em.invokeEventLoop();
-    if (event.type == sdl.c.SDL_EVENT_QUIT) return try self.close();
+    if (event.type == sdl.SDL_EVENT_QUIT) return try self.close();
 
-    _ = sdl.c.SDL_RenderClear(self._renderer);
+    _ = sdl.SDL_RenderClear(self._renderer);
     if (self._scene) |s| try s.update(self._renderer.?);
     // TODO: get the background color from user input
-    _ = sdl.c.SDL_SetRenderDrawColor(self._renderer, 0, 0, 0, 255);
-    _ = sdl.c.SDL_RenderPresent(self._renderer);
+    _ = sdl.SDL_SetRenderDrawColor(self._renderer, 0, 0, 0, 255);
+    _ = sdl.SDL_RenderPresent(self._renderer);
 
     if (self.lifecycle.postUpdate) |func| func(self);
-    sdl.c.SDL_Delay(self.rate);
+    sdl.SDL_Delay(self.rate);
 }
 
 /// Deinits the local fields and quits/destroys the SDL stuff.
@@ -123,10 +123,10 @@ pub fn close(self: *Screen) !void {
     self._opened = false;
     if (self.lifecycle.postClose) |func| func(self);
 
-    sdl.c.TTF_Quit();
-    sdl.c.SDL_DestroyRenderer(self._renderer);
-    sdl.c.SDL_DestroyWindow(self._window);
-    sdl.c.SDL_Quit();
+    sdl.TTF_Quit();
+    sdl.SDL_DestroyRenderer(self._renderer);
+    sdl.SDL_DestroyWindow(self._window);
+    sdl.SDL_Quit();
 }
 
 pub fn setScene(self: *Screen, newscene: *Scene) void {
