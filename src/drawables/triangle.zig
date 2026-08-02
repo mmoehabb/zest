@@ -1,7 +1,7 @@
 //! A concrete drawable to render a simple triangle by using SDL_RenderGeometry.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 
@@ -33,12 +33,12 @@ pub fn toDrawable(self: *Triangle) modules.Drawable {
 fn draw(
     drawable: *modules.Drawable,
     _: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     rot: types.Rotation,
     dim: types.Dimensions,
 ) !void {
-    const color: sdl.c.SDL_FColor = .{
+    const color: sdl.SDL_FColor = .{
         .r = @floatFromInt(drawable.color.?.r),
         .g = @floatFromInt(drawable.color.?.g),
         .b = @floatFromInt(drawable.color.?.b),
@@ -55,21 +55,21 @@ fn draw(
     const sin = @sin(angle);
     const tan = @sin(angle);
 
-    const pa = sdl.c.SDL_Vertex{
+    const pa = sdl.SDL_Vertex{
         .position = .{
             .x = center.x + (dim.h / 2 * sin) - (dim.w / 2 * cos),
             .y = center.y - (dim.w / 2 * sin) - (dim.h / 2 * cos),
         },
         .color = color,
     };
-    const pb = sdl.c.SDL_Vertex{
+    const pb = sdl.SDL_Vertex{
         .position = .{
             .x = pa.position.x + (dim.w * cos),
             .y = pa.position.y + (dim.w * sin),
         },
         .color = color,
     };
-    const pc = sdl.c.SDL_Vertex{
+    const pc = sdl.SDL_Vertex{
         .position = .{
             .x = center.x - ((tan * 2 * dim.h) / 3),
             .y = center.y + ((cos * 2 * dim.h) / 3),
@@ -77,11 +77,11 @@ fn draw(
         .color = color,
     };
 
-    const verts = [_]sdl.c.SDL_Vertex{ pa, pb, pc };
+    const verts = [_]sdl.SDL_Vertex{ pa, pb, pc };
     const indices = [_]c_int{ 0, 1, 2 };
 
-    if (!sdl.c.SDL_RenderGeometry(renderer, null, &verts, 3, &indices, 3)) {
-        sdl.c.SDL_Log("Unable to render geometry: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderGeometry(renderer, null, &verts, 3, &indices, 3)) {
+        sdl.SDL_Log("Unable to render geometry: %s", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 }

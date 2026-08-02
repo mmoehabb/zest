@@ -5,15 +5,27 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Declare and add the module
+    const sdl_c = b.addTranslateC(.{
+        .root_source_file = b.path("src/sdl.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+    sdl_c.linkSystemLibrary("SDL3", .{ .needed = true });
+    sdl_c.linkSystemLibrary("SDL3_ttf", .{ .needed = true });
+    sdl_c.linkSystemLibrary("SDL3_image", .{ .needed = true });
+    sdl_c.link_libc = true;
+
     const zigsdl = b.addModule("zigsdl", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{
+                .name = "sdl",
+                .module = sdl_c.createModule(),
+            },
+        },
     });
-    zigsdl.linkSystemLibrary("SDL3", .{ .needed = true });
-    zigsdl.linkSystemLibrary("SDL3_ttf", .{ .needed = true });
-    zigsdl.linkSystemLibrary("SDL3_image", .{ .needed = true });
-    zigsdl.link_libc = true;
 
     // ************************************************
     // **** Add the examples files as executables *****
@@ -122,6 +134,21 @@ pub fn build(b: *std.Build) void {
     const exm7_run_cmd = b.addRunArtifact(exm7);
     const exm7_run_step = b.step("example:gui", "Run examples/gui.zig");
     exm7_run_step.dependOn(&exm7_run_cmd.step);
+
+    const exm8 = b.addExecutable(.{
+        .name = "example:falling-boxes",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/falling-boxes.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
+    });
+    exm8.root_module.addImport("zigsdl", zigsdl);
+    b.installArtifact(exm8);
+
+    const exm8_run_cmd = b.addRunArtifact(exm8);
+    const exm8_run_step = b.step("example:falling-boxes", "Run examples/falling-boxes.zig");
+    exm8_run_step.dependOn(&exm8_run_cmd.step);
 
     // ***********************************
     // ********** Add test step **********

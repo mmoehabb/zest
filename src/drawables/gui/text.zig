@@ -1,7 +1,7 @@
 //! A concrete drawable that renders texts by using sdl_ttf.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
 const types = @import("../../types/mod.zig");
 
@@ -12,7 +12,7 @@ font_path: []const u8,
 font_size: f32,
 color: types.Color = .{ .b = 255, .g = 255, .r = 255 },
 
-_texture: ?[*c]sdl.c.SDL_Texture = null,
+_texture: ?[*c]sdl.SDL_Texture = null,
 _draw_strategy: modules.DrawStrategy = .{
     .draw = draw,
     .destroy = destroy,
@@ -51,7 +51,7 @@ pub fn setLabel(self: *Text, label: []const u8) void {
 fn draw(
     drawable: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     rot: types.Rotation,
     _: types.Dimensions,
@@ -59,39 +59,39 @@ fn draw(
     const self = @as(*Text, @constCast(@fieldParentPtr("_draw_strategy", ds)));
 
     const texture = self._texture orelse blk: {
-        const font = sdl.c.TTF_OpenFont(self.font_path.ptr, self.font_size);
+        const font = sdl.TTF_OpenFont(self.font_path.ptr, self.font_size);
         const text = if (self.text.len > 0) self.text else " ";
-        const surface = sdl.c.TTF_RenderText_Blended(font, text.ptr, text.len, sdl.c.SDL_Color{
+        const surface = sdl.TTF_RenderText_Blended(font, text.ptr, text.len, sdl.SDL_Color{
             .a = self.*.color.a,
             .b = self.*.color.b,
             .g = self.*.color.g,
             .r = self.*.color.r,
         });
-        defer sdl.c.SDL_DestroySurface(surface);
-        const texture = sdl.c.SDL_CreateTextureFromSurface(renderer, surface);
-        _ = sdl.c.SDL_SetTextureScaleMode(texture, sdl.c.SDL_SCALEMODE_LINEAR);
+        defer sdl.SDL_DestroySurface(surface);
+        const texture = sdl.SDL_CreateTextureFromSurface(renderer, surface);
+        _ = sdl.SDL_SetTextureScaleMode(texture, sdl.SDL_SCALEMODE_LINEAR);
         break :blk texture;
     };
 
-    const dest = sdl.c.SDL_FRect{
+    const dest = sdl.SDL_FRect{
         .x = pos.x,
         .y = pos.y,
         .w = @as(f32, @floatFromInt(texture.*.w)),
         .h = @as(f32, @floatFromInt(texture.*.h)),
     };
 
-    const center = sdl.c.SDL_FPoint{
+    const center = sdl.SDL_FPoint{
         .x = dest.w / 2,
         .y = dest.h / 2,
     };
 
     const flip: c_uint = blk: {
-        if (rot.x > 0) break :blk sdl.c.SDL_FLIP_VERTICAL;
-        if (rot.y > 0) break :blk sdl.c.SDL_FLIP_HORIZONTAL;
-        break :blk sdl.c.SDL_FLIP_NONE;
+        if (rot.x > 0) break :blk sdl.SDL_FLIP_VERTICAL;
+        if (rot.y > 0) break :blk sdl.SDL_FLIP_HORIZONTAL;
+        break :blk sdl.SDL_FLIP_NONE;
     };
 
-    if (!sdl.c.SDL_RenderTextureRotated(
+    if (!sdl.SDL_RenderTextureRotated(
         renderer,
         texture,
         null,
@@ -110,5 +110,5 @@ fn draw(
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*Text, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._texture) |t| sdl.c.SDL_DestroyTexture(t);
+    if (self._texture) |t| sdl.SDL_DestroyTexture(t);
 }

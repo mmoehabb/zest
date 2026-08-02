@@ -5,7 +5,7 @@
 //! a container of a drawable, or all the three together.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const types = @import("../types/mod.zig");
 
 const Scene = @import("./scene.zig");
@@ -36,8 +36,9 @@ lifecycle: types.LifeCycle = types.LifeCycle{},
 _allocator: std.mem.Allocator,
 _scene: ?*Scene = null,
 _parent: ?*Object = null,
-_scripts: std.ArrayList(*Script) = std.ArrayList(*Script).empty,
-_children: std.ArrayList(*Object) = std.ArrayList(*Object).empty,
+_scripts: std.ArrayList(Script) = .empty,
+_scripts_memo: std.StringHashMap(*Script),
+_children: std.ArrayList(*Object) = .empty,
 _active: bool,
 
 pub fn init(
@@ -59,15 +60,18 @@ pub fn init(
         .drawable = props.drawable,
         ._active = props.active,
         ._allocator = allocator,
+        ._scripts_memo = std.StringHashMap(*Script).init(allocator),
     };
 }
 
 pub fn deinit(self: *Object) void {
     if (self.lifecycle.preClose) |func| func(self);
 
+    self._active = false;
     if (self.drawable) |d| d.destroy();
 
-    for (self._scripts.items) |script| script.end(self);
+    self._scripts_memo.deinit();
+    for (self._scripts.items) |*script| script.end(self);
     self._scripts.deinit(self._allocator);
 
     self._children.deinit(self._allocator);
@@ -80,17 +84,17 @@ pub fn start(self: *Object) !void {
     if (!self._active) return;
     if (self.lifecycle.preOpen) |func| func(self);
 
-    for (self._scripts.items) |script| script.start(self);
+    for (self._scripts.items) |*script| script.start(self);
     for (self._children.items) |child| try child.start();
 
     if (self.lifecycle.postOpen) |func| func(self);
 }
 
 /// This method shall only be invoked via the scene.
-pub fn update(self: *Object, renderer: *sdl.c.SDL_Renderer) !void {
+pub fn update(self: *Object, renderer: *sdl.SDL_Renderer) !void {
     if (!self._active) return;
     if (self.lifecycle.preUpdate) |func| func(self);
-    for (self._scripts.items) |script| script.update(self);
+    for (self._scripts.items) |*script| script.update(self);
 
     self.drawable.?.dim.sf = if (self._parent) |p| blk: {
         break :blk p.drawable.?.dim.scale * p.drawable.?.dim.sf;
@@ -120,7 +124,7 @@ pub fn activate(self: *Object) void {
 /// Note: Only activated objects are rendered in the scene, and their scripts are invoked.
 pub fn deactivate(self: *Object) void {
     self._active = false;
-    for (self._scripts.items) |script| script.end(self);
+    for (self._scripts.items) |*script| script.end(self);
 }
 
 pub fn setDrawable(self: *Object, drawable: *Drawable) void {
@@ -148,25 +152,38 @@ pub fn setAbsRotation(self: *Object, rot: types.Rotation) void {
     self.rotation = rot.subtract(parentRot);
 }
 
-pub fn addScript(self: *Object, script: *Script) !void {
+pub fn addScript(self: *Object, script: Script) !void {
     try self._scripts.append(self._allocator, script);
 }
 
 /// By convention, the name of any script should equal exactly the name of the type.
 /// See [root.modules.script.name](#root.modules.script.name).
 pub fn getScript(self: *Object, P: type, name: []const u8) ?*P {
-    for (self._scripts.items) |script| {
+    if (self._scripts_memo.get(name)) |found| {
+        return @as(
+            *P,
+            @constCast(@fieldParentPtr(
+                "_script_strategy",
+                found.strategy,
+            )),
+        );
+    }
+
+    var found: ?*P = null;
+    for (self._scripts.items) |*script| {
         if (std.mem.eql(u8, script.name, name)) {
-            return @as(
+            found = @as(
                 *P,
                 @constCast(@fieldParentPtr(
                     "_script_strategy",
                     script.strategy,
                 )),
             );
+            self._scripts_memo.put(name, script) catch {};
+            break;
         }
     }
-    return null;
+    return found;
 }
 
 pub fn setScene(self: *Object, scene: *Scene) void {
@@ -190,6 +207,7 @@ pub fn detach(self: *Object) void {
 /// detaching the child from its old parent.
 pub fn addChild(self: *Object, child: *Object) !void {
     defer if (self._scene) |s| s.resetMemo();
+    // TODO: should keep the children array sorted by position.z
     try self._children.append(self._allocator, child);
     if (child._parent) |_| child.detach();
     child._parent = self;

@@ -1,7 +1,7 @@
 //! A concrete drawable with facilities to render sprites/animations
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 
@@ -31,7 +31,7 @@ ms: u32 = 75,
 /// The next frame, to be drawn, index (default, 0).
 index: u32 = 0,
 
-_texture: ?[*c]sdl.c.SDL_Texture = null,
+_texture: ?[*c]sdl.SDL_Texture = null,
 _draw_strategy: modules.DrawStrategy = .{
     .draw = draw,
     .destroy = destroy,
@@ -70,7 +70,7 @@ pub fn setImgPath(self: *Sprite, img_path: []const u8) void {
 fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     rot: types.Rotation,
     dim: types.Dimensions,
@@ -78,35 +78,35 @@ fn draw(
     const self = @as(*Sprite, @constCast(@fieldParentPtr("_draw_strategy", ds)));
 
     const texture = self._texture orelse blk: {
-        const surface = sdl.c.IMG_Load(self.img_path.ptr);
-        defer sdl.c.SDL_DestroySurface(surface);
-        const texture = sdl.c.SDL_CreateTextureFromSurface(renderer, surface);
+        const surface = sdl.IMG_Load(self.img_path.ptr);
+        defer sdl.SDL_DestroySurface(surface);
+        const texture = sdl.SDL_CreateTextureFromSurface(renderer, surface);
         break :blk texture;
     };
 
-    const src = sdl.c.SDL_FRect{
+    const src = sdl.SDL_FRect{
         .x = (@as(f32, @floatFromInt(self.index)) * self.frame_width) + self.gap,
         .y = 0,
         .w = self.frame_width,
         .h = self.frame_height,
     };
-    const dest = sdl.c.SDL_FRect{
+    const dest = sdl.SDL_FRect{
         .x = pos.x,
         .y = pos.y,
         .w = dim.w,
         .h = dim.h,
     };
-    const center = sdl.c.SDL_FPoint{
+    const center = sdl.SDL_FPoint{
         .x = dim.w / 2,
         .y = dim.h / 2,
     };
     const flip: c_uint = blk: {
-        if (rot.x > 0) break :blk sdl.c.SDL_FLIP_VERTICAL;
-        if (rot.y > 0) break :blk sdl.c.SDL_FLIP_HORIZONTAL;
-        break :blk sdl.c.SDL_FLIP_NONE;
+        if (rot.x > 0) break :blk sdl.SDL_FLIP_VERTICAL;
+        if (rot.y > 0) break :blk sdl.SDL_FLIP_HORIZONTAL;
+        break :blk sdl.SDL_FLIP_NONE;
     };
 
-    if (!sdl.c.SDL_RenderTextureRotated(
+    if (!sdl.SDL_RenderTextureRotated(
         renderer,
         texture,
         &src,
@@ -116,13 +116,13 @@ fn draw(
         flip,
     )) return error.RenderFailed;
 
-    if (sdl.c.SDL_GetTicks() - self._last_ticks >= self.ms) {
+    if (sdl.SDL_GetTicks() - self._last_ticks >= self.ms) {
         self.index = if (self.index >= self.frames_count) 0 else self.index + 1;
-        self._last_ticks = sdl.c.SDL_GetTicks();
+        self._last_ticks = sdl.SDL_GetTicks();
     }
 }
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*Sprite, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._texture) |t| sdl.c.SDL_DestroyTexture(t);
+    if (self._texture) |t| sdl.SDL_DestroyTexture(t);
 }

@@ -1,7 +1,7 @@
 //! A concrete drawable to render a simple rectangle by using SDL_RenderGeometry.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 
@@ -18,7 +18,7 @@ dim: types.Dimensions = .{},
 /// Used in creating a temporary file, in case the content is provided.
 io: std.Io,
 
-_texture: [*c]sdl.c.SDL_Texture = null,
+_texture: [*c]sdl.SDL_Texture = null,
 _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
     .draw = draw,
     .destroy = destroy,
@@ -53,7 +53,7 @@ pub fn getDim(self: *SVG) types.Dimensions {
 fn draw(
     drawable: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     _: types.Rotation,
     dim: types.Dimensions,
@@ -73,21 +73,21 @@ fn draw(
             // Ensure the temp file is being cleaned up
             // NOTE: it's being removed in the destroy method below
         }
-        self._texture = sdl.c.IMG_LoadTexture(renderer, self.path.ptr);
+        self._texture = sdl.IMG_LoadTexture(renderer, self.path.ptr);
         break :blk self._texture;
     };
     // TODO: extend the error type to include more useful values
     if (texture == null) return error.RenderFailed;
 
-    const dest = sdl.c.SDL_FRect{
+    const dest = sdl.SDL_FRect{
         .x = pos.x,
         .y = pos.y,
         .w = dim.w,
         .h = dim.h,
     };
 
-    if (!sdl.c.SDL_RenderTexture(renderer, texture, null, &dest)) {
-        sdl.c.SDL_Log("Failed to render SVG: %s\n", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderTexture(renderer, texture, null, &dest)) {
+        sdl.SDL_Log("Failed to render SVG: %s\n", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 
@@ -101,6 +101,6 @@ fn draw(
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*SVG, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._texture) |_| sdl.c.SDL_DestroyTexture(self._texture.?);
+    if (self._texture) |_| sdl.SDL_DestroyTexture(self._texture.?);
     if (self.content.len > 0) std.Io.Dir.deleteFileAbsolute(self.io, self.path) catch {};
 }

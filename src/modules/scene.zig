@@ -3,7 +3,7 @@
 //! invoking the [setScreen](#root.modules.scene.setScreen) method.
 
 const std = @import("std");
-const sdl = @import("../sdl.zig");
+const sdl = @import("sdl");
 
 const Screen = @import("./screen.zig");
 const Object = @import("./object.zig");
@@ -54,7 +54,7 @@ pub fn start(self: *Scene) !void {
 }
 
 /// This ought to be invoked by the [screen](#root.modules.screen).
-pub fn update(self: *Scene, renderer: *sdl.c.SDL_Renderer) !void {
+pub fn update(self: *Scene, renderer: *sdl.SDL_Renderer) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
     for (self._objects.items) |obj| try obj.update(renderer);
     if (self.lifecycle.postUpdate) |func| func(self);
@@ -82,9 +82,9 @@ pub fn addObject(self: *Scene, obj: *Object) !void {
     obj.setScene(self);
     // Objects should be ordered descendly; ensure to preserve this ordering.
     var i: usize = 0;
-    for (self._objects.items, 0..) |item, j| {
-        i = j;
-        if (item.position.z <= obj.position.z) break;
+    for (self._objects.items) |item| {
+        if (item.position.z >= obj.position.z) break;
+        i += 1;
     }
     try self._objects.insert(self._allocator, i, obj);
 }

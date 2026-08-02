@@ -2,7 +2,7 @@
 //! the typed text and SDL's text-input facilities for capturing unicode characters.
 
 const std = @import("std");
-const sdl = @import("../../sdl.zig");
+const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
 const types = @import("../../types/mod.zig");
 
@@ -37,7 +37,7 @@ _prev_mouse_down_inside: bool = false,
 _prev_mouse_down_outside: bool = false,
 _text_input_active: bool = false,
 _prev_bs_down: bool = false,
-_texture: ?[*c]sdl.c.SDL_Texture = null,
+_texture: ?[*c]sdl.SDL_Texture = null,
 _last_rendered: []const u8 = "",
 _last_color: types.Color = .{},
 _text: []u8 = &[_]u8{},
@@ -87,27 +87,27 @@ pub fn setText(self: *TextInput, str: []const u8) void {
     self._texture = null;
 }
 
-fn fillRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
-    const fc: sdl.c.SDL_FColor = .{
+fn fillRect(renderer: *sdl.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color) !void {
+    const fc: sdl.SDL_FColor = .{
         .r = @floatFromInt(color.r),
         .g = @floatFromInt(color.g),
         .b = @floatFromInt(color.b),
         .a = @floatFromInt(color.a),
     };
-    const verts = [_]sdl.c.SDL_Vertex{
+    const verts = [_]sdl.SDL_Vertex{
         .{ .position = .{ .x = x, .y = y }, .color = fc },
         .{ .position = .{ .x = x, .y = y + h }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y }, .color = fc },
         .{ .position = .{ .x = x + w, .y = y + h }, .color = fc },
     };
     const indices = [_]c_int{ 0, 1, 2, 2, 1, 3 };
-    if (!sdl.c.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
-        sdl.c.SDL_Log("TextInput: unable to render geometry: %s", sdl.c.SDL_GetError());
+    if (!sdl.SDL_RenderGeometry(renderer, null, &verts, 4, &indices, 6)) {
+        sdl.SDL_Log("TextInput: unable to render geometry: %s", sdl.SDL_GetError());
         return error.RenderFailed;
     }
 }
 
-fn strokeRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color, t: f32) !void {
+fn strokeRect(renderer: *sdl.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, color: types.Color, t: f32) !void {
     try fillRect(renderer, x, y, w, t, color);
     try fillRect(renderer, x, y + h - t, w, t, color);
     try fillRect(renderer, x, y, t, h, color);
@@ -117,7 +117,7 @@ fn strokeRect(renderer: *sdl.c.SDL_Renderer, x: f32, y: f32, w: f32, h: f32, col
 fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
-    renderer: *sdl.c.SDL_Renderer,
+    renderer: *sdl.SDL_Renderer,
     pos: types.Position,
     _: types.Rotation,
     dim: types.Dimensions,
@@ -155,7 +155,7 @@ fn draw(
 
     if (self.focused) {
         if (!self._text_input_active) {
-            _ = sdl.c.SDL_StartTextInput(modules.Globals.getAll().activeWindow);
+            _ = sdl.SDL_StartTextInput(modules.Globals.getAll().activeWindow);
             self._text_input_active = true;
         }
 
@@ -182,7 +182,7 @@ fn draw(
         }
         self._prev_bs_down = bs_down;
     } else if (self._text_input_active) {
-        _ = sdl.c.SDL_StopTextInput(null);
+        _ = sdl.SDL_StopTextInput(null);
         self._text_input_active = false;
     }
 
@@ -208,21 +208,21 @@ fn draw(
             !std.mem.eql(u8, self._last_rendered, draw_str) or
             !std.meta.eql(self._last_color, draw_color);
         if (text_changed) {
-            if (self._texture) |tex| sdl.c.SDL_DestroyTexture(tex);
-            const font = sdl.c.TTF_OpenFont(self.font_path.ptr, self.font_size);
+            if (self._texture) |tex| sdl.SDL_DestroyTexture(tex);
+            const font = sdl.TTF_OpenFont(self.font_path.ptr, self.font_size);
             if (font == null) return error.RenderFailed;
-            defer sdl.c.TTF_CloseFont(font);
-            const surface = sdl.c.TTF_RenderText_Blended(font, draw_str.ptr, draw_str.len, sdl.c.SDL_Color{
+            defer sdl.TTF_CloseFont(font);
+            const surface = sdl.TTF_RenderText_Blended(font, draw_str.ptr, draw_str.len, sdl.SDL_Color{
                 .a = draw_color.a,
                 .b = draw_color.b,
                 .g = draw_color.g,
                 .r = draw_color.r,
             });
             if (surface == null) return error.RenderFailed;
-            defer sdl.c.SDL_DestroySurface(surface);
-            self._texture = sdl.c.SDL_CreateTextureFromSurface(renderer, surface);
+            defer sdl.SDL_DestroySurface(surface);
+            self._texture = sdl.SDL_CreateTextureFromSurface(renderer, surface);
             if (self._texture) |tex| {
-                _ = sdl.c.SDL_SetTextureScaleMode(tex, sdl.c.SDL_SCALEMODE_LINEAR);
+                _ = sdl.SDL_SetTextureScaleMode(tex, sdl.SDL_SCALEMODE_LINEAR);
             } else return error.RenderFailed;
             self._last_rendered = draw_str;
             self._last_color = draw_color;
@@ -230,20 +230,20 @@ fn draw(
 
         if (self._texture) |tex| {
             const th: f32 = @floatFromInt(tex.*.h);
-            const dest = sdl.c.SDL_FRect{
+            const dest = sdl.SDL_FRect{
                 .x = inner_x + 4,
                 .y = inner_y + (inner_h - th) / 2,
                 .w = @floatFromInt(tex.*.w),
                 .h = th,
             };
-            if (!sdl.c.SDL_RenderTexture(renderer, tex, null, &dest)) {
+            if (!sdl.SDL_RenderTexture(renderer, tex, null, &dest)) {
                 return error.RenderFailed;
             }
         }
     }
 
     if (self._state == .Focused) {
-        const ticks: u64 = sdl.c.SDL_GetTicks();
+        const ticks: u64 = sdl.SDL_GetTicks();
         if (ticks % 1000 < 500) {
             const caret_x = if (self._texture) |tex|
                 inner_x + 4 + @as(f32, @floatFromInt(tex.*.w)) + 1
@@ -270,7 +270,7 @@ fn utf8BackOne(s: []const u8) usize {
 
 fn destroy(_: *modules.Drawable, ds: *const modules.DrawStrategy) void {
     const self = @as(*TextInput, @constCast(@fieldParentPtr("_draw_strategy", ds)));
-    if (self._text_input_active) _ = sdl.c.SDL_StopTextInput(null);
-    if (self._texture) |t| sdl.c.SDL_DestroyTexture(t);
+    if (self._text_input_active) _ = sdl.SDL_StopTextInput(null);
+    if (self._texture) |t| sdl.SDL_DestroyTexture(t);
     self._allocator.free(self._text);
 }

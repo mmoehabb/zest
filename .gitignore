@@ -2,3 +2,10 @@
 zig-out/
 *.o
 *.a
+
+# Typst compiled files
+docs/papers/*.pdf
+
+# Emacs temp file
+\#*\#
+*~

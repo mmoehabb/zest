@@ -3,7 +3,6 @@
 const std = @import("std");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
-const AudioPlayer = @import("../scripts/mod.zig").AudioPlayer;
 
 const Movement = @This();
 
@@ -17,6 +16,26 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
 },
 
 _last_pressed: types.event.Key = .Unknown,
+
+_allocator: std.mem.Allocator,
+
+pub fn init(allocator: std.mem.Allocator, velocity: f32, smooth: bool) !*Movement {
+    var script = try allocator.create(Movement);
+    script.velocity = velocity;
+    script.smooth = smooth;
+    script._last_pressed = .Unknown;
+    script._script_strategy = .{
+        .start = start,
+        .update = update,
+        .end = end,
+    };
+    script._allocator = allocator;
+    return script;
+}
+
+pub fn deinit(self: *Movement) void {
+    self._allocator.destroy(self);
+}
 
 pub fn toScript(self: *Movement) modules.Script {
     return modules.Script{

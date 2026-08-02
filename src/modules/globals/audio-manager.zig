@@ -1,6 +1,6 @@
 const std = @import("std");
-const sdl = @import("../sdl.zig");
-const AudioStream = @import("./audio-stream.zig");
+const sdl = @import("sdl");
+const AudioStream = @import("../audio-stream.zig");
 
 const AudioManager = @This();
 
@@ -30,7 +30,7 @@ pub fn deinit(self: *AudioManager) void {
 /// Users shall only get this stream when they need it; push audio data
 /// into it immediately. As this stream will be auto destroyed soon,
 /// by the clean cycle, if it's found empty and not paused.
-pub fn newStream(self: *AudioManager, audio_spec: *sdl.c.SDL_AudioSpec) !AudioStream {
+pub fn newStream(self: *AudioManager, audio_spec: *sdl.SDL_AudioSpec) !AudioStream {
     const audioStream = try AudioStream.new(audio_spec);
     if (self._audio_streams.items.len == 0) {
         self._io_thread = std.Thread.spawn(.{}, invokeCleanCycle, .{self}) catch |e| return e;
