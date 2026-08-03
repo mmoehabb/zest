@@ -3,6 +3,7 @@
 
 const std = @import("std");
 
+const plugins = @import("../plugins/mod.zig");
 const modules = @import("../modules/mod.zig");
 const types = @import("../types/mod.zig");
 
@@ -40,7 +41,7 @@ pub fn toScript(self: *Mesh) modules.Script {
 }
 
 fn start(_: *modules.Script, obj: *modules.Object) void {
-    modules.Globals.getAll().phyzxEngine.addObject(obj) catch std.debug.print(
+    modules.PluginManager.get(plugins.PhyzxEngine, "PhyzxEngine").?.addObject(obj) catch std.debug.print(
         "Mesh: couldn't add object into the physics engine!",
         .{},
     );
@@ -49,5 +50,5 @@ fn start(_: *modules.Script, obj: *modules.Object) void {
 fn update(_: *modules.Script, _: *modules.Object) void {}
 
 fn end(_: *modules.Script, obj: *modules.Object) void {
-    modules.Globals.getAll().phyzxEngine.rmvObject(obj);
+    modules.PluginManager.get(plugins.PhyzxEngine, "PhyzxEngine").?.rmvObject(obj);
 }

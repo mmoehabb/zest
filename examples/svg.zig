@@ -4,8 +4,13 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+
+    try zigsdl.modules.PluginManager.init(allocator);
+    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
+    defer zigsdl.modules.PluginManager.deinit();
 
     const screen_width = 1024;
     const screen_height = 680;

@@ -36,10 +36,14 @@ fn onSelectChange(self: *GUI.Select) void {
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+    try zigsdl.modules.PluginManager.init(allocator);
+    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
+    defer zigsdl.modules.PluginManager.deinit();
 
-    var button = GUI.Button.new(.{
+    var button = try GUI.Button.new(.{
         .label = "Click me",
         .dim = .{ .w = 140, .h = 36, .d = 1 },
         .font_path = font_path,
@@ -48,7 +52,7 @@ pub fn main(init: std.process.Init) !void {
     });
     var button_drawable = button.toDrawable();
 
-    var checkbox = GUI.CheckBox.new(.{
+    var checkbox = try GUI.CheckBox.new(.{
         .dim = .{ .w = 28, .h = 28, .d = 1 },
         .on_toggle = onToggle,
     });

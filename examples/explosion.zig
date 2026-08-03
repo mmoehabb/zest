@@ -4,8 +4,16 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+    var audioManager = try zigsdl.plugins.AudioManager.init(allocator, init.io);
+    defer audioManager.deinit();
+
+    try zigsdl.modules.PluginManager.init(allocator);
+    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
+    try zigsdl.modules.PluginManager.add(&audioManager, "AudioManager");
+    defer zigsdl.modules.PluginManager.deinit();
 
     // Create sprite object
     var idle = zigsdl.drawables.Sprite.new(.{
@@ -59,13 +67,14 @@ pub fn main(init: std.process.Init) !void {
         var explode_drawable = explode.toDrawable(.{ .w = 120, .h = 150, .d = 1 }, .{});
 
         var pressed = false;
+        var em: ?*zigsdl.plugins.EventManager = null;
 
         fn func(self: *anyopaque) void {
             const o = @as(*zigsdl.modules.Object, @ptrCast(@alignCast(self)));
-            var em = zigsdl.modules.Globals.getAll().eventManager;
+            em = em orelse zigsdl.modules.PluginManager.get(zigsdl.plugins.EventManager, "EventManager").?;
             var ap = o.getScript(zigsdl.scripts.AudioPlayer, "AudioPlayer");
 
-            if (em.isKeyDown(.Space) and !pressed) {
+            if (em.?.isKeyDown(.Space) and !pressed) {
                 _ = ap.?.play() catch unreachable;
                 o.setDrawable(&explode_drawable);
                 pressed = true;

@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const modules = @import("../modules/mod.zig");
+const plugins = @import("../plugins/mod.zig");
 const types = @import("../types/mod.zig");
 const Mesh = @import("./mesh.zig");
 
@@ -20,7 +21,7 @@ _collisions: std.ArrayList(types.Collision) = .empty,
 
 _allocator: std.mem.Allocator,
 _script_strategy: modules.ScriptStrategy,
-_phyzxEngine: ?*modules.PhyzxEngine = null,
+_phyzxEngine: ?*plugins.PhyzxEngine = null,
 
 pub fn init(data: struct {
     allocator: std.mem.Allocator,
@@ -62,7 +63,7 @@ fn start(s: *modules.Script, _: *modules.Object) void {
     const self = @as(*Rigidbody, @constCast(
         @fieldParentPtr("_script_strategy", s.strategy),
     ));
-    self._phyzxEngine = modules.Globals.getAll().phyzxEngine;
+    self._phyzxEngine = modules.PluginManager.get(plugins.PhyzxEngine, "PhyzxEngine");
     if (self.static) {
         self._pfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
         self._nfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };

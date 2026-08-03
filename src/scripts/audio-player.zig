@@ -4,6 +4,7 @@
 const std = @import("std");
 const sdl = @import("sdl");
 const modules = @import("../modules/mod.zig");
+const plugins = @import("../plugins/mod.zig");
 const types = @import("../types/mod.zig");
 
 const AudioPlayer = @This();
@@ -86,7 +87,10 @@ pub fn loadWAV(self: *AudioPlayer, path: []const u8) void {
 }
 
 pub fn play(self: *AudioPlayer) !modules.AudioStream {
-    var audio_stream = try modules.Globals.getAll().audioManager.newStream(&self._audio_spec);
+    var audio_stream = try modules.PluginManager.get(
+        plugins.AudioManager,
+        "AudioManager",
+    ).?.newStream(&self._audio_spec);
     audio_stream.@"resume"(); // NOTE: streams are paused by default
     audio_stream.putAudio(self._audio_buf, self._audio_buf_len);
     return audio_stream;
