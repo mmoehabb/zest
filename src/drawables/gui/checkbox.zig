@@ -4,6 +4,7 @@
 const std = @import("std");
 const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
+const plugins = @import("../../plugins/mod.zig");
 const types = @import("../../types/mod.zig");
 
 const CheckBox = @This();
@@ -27,16 +28,22 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
     .draw = draw,
     .destroy = destroy,
 },
+_em: ?*plugins.EventManager = null,
 
-pub fn new(c: CheckBox) CheckBox {
-    return CheckBox{
-        .checked = c.checked,
-        .dim = c.dim,
-        .box_color = c.box_color,
-        .hover_color = c.hover_color,
-        .check_color = c.check_color,
-        .on_toggle = c.on_toggle,
-    };
+pub fn new(c: CheckBox) !CheckBox {
+    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+        return CheckBox{
+            .checked = c.checked,
+            .dim = c.dim,
+            .box_color = c.box_color,
+            .hover_color = c.hover_color,
+            .check_color = c.check_color,
+            .on_toggle = c.on_toggle,
+            ._em = em,
+        };
+    }
+    std.log.err("CheckBox.new: EventManager plugin is required!", .{});
+    return error.EventManagerRequired;
 }
 
 pub fn toDrawable(self: *CheckBox) modules.Drawable {
@@ -77,9 +84,8 @@ fn draw(
 ) !void {
     const self = @as(*CheckBox, @constCast(@fieldParentPtr("_draw_strategy", ds)));
 
-    var em = modules.Globals.getAll().eventManager;
-    const mouse_pos = em.getMousePos();
-    const mouse_down = em.isMouseDown();
+    const mouse_pos = self._em.?.getMousePos();
+    const mouse_down = self._em.?.isMouseDown();
 
     const inside = mouse_pos.x >= pos.x and mouse_pos.x <= pos.x + dim.w and
         mouse_pos.y >= pos.y and mouse_pos.y <= pos.y + dim.h;

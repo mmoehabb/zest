@@ -4,8 +4,12 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+    try zigsdl.modules.PluginManager.init(allocator);
+    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
+    defer zigsdl.modules.PluginManager.deinit();
 
     // Create a drawable object
     var rect = zigsdl.drawables.Rect.new(
@@ -58,15 +62,16 @@ pub fn main(init: std.process.Init) !void {
     try scene.addObject(&obj3);
 
     scene.lifecycle.postUpdate = struct {
+        var em: ?*zigsdl.plugins.EventManager = null;
         fn func(self: *anyopaque) void {
             const s = @as(*zigsdl.modules.Scene, @ptrCast(@alignCast(self)));
-            var em = zigsdl.modules.Globals.getAll().eventManager;
-            if (em.isKeyDown(.W)) s.move(.{ .y = 5 });
-            if (em.isKeyDown(.D)) s.move(.{ .x = -5 });
-            if (em.isKeyDown(.S)) s.move(.{ .y = -5 });
-            if (em.isKeyDown(.A)) s.move(.{ .x = 5 });
-            if (em.isKeyDown(.E)) s.scale += 0.1;
-            if (em.isKeyDown(.Q)) s.scale -= 0.1;
+            em = em orelse zigsdl.modules.PluginManager.get(zigsdl.plugins.EventManager, "EventManager").?;
+            if (em.?.isKeyDown(.W)) s.move(.{ .y = 5 });
+            if (em.?.isKeyDown(.D)) s.move(.{ .x = -5 });
+            if (em.?.isKeyDown(.S)) s.move(.{ .y = -5 });
+            if (em.?.isKeyDown(.A)) s.move(.{ .x = 5 });
+            if (em.?.isKeyDown(.E)) s.scale += 0.1;
+            if (em.?.isKeyDown(.Q)) s.scale -= 0.1;
         }
     }.func;
 

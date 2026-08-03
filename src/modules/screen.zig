@@ -3,10 +3,10 @@
 const std = @import("std");
 const sdl = @import("sdl");
 
-const Globals = @import("globals/mod.zig");
-const EventManager = @import("globals/event-manager.zig");
-const types = @import("../types/mod.zig");
+const PluginManager = @import("plugin-manager.zig");
 const Scene = @import("scene.zig");
+const EventManager = @import("../plugins/event-manager.zig");
+const types = @import("../types/mod.zig");
 
 const Screen = @This();
 
@@ -29,7 +29,7 @@ _scene: ?*Scene = null,
 _window: ?*sdl.SDL_Window = null,
 _renderer: ?*sdl.SDL_Renderer = null,
 _opened: bool = false,
-_em: *EventManager,
+_em: ?*EventManager,
 
 pub fn init(
     params: struct {
@@ -39,13 +39,17 @@ pub fn init(
         rate: u32,
     },
 ) !Screen {
-    if (!Globals.isInitialized()) return error.MustInitializeGlobals;
+    if (PluginManager.isInitialized() == false) {
+        std.log.err("Screen.init: you must initialize the PluginManager first.", .{});
+        return error.PluginManagerRequired;
+    }
+    const eventManager = PluginManager.get(EventManager, "EventManager");
     return Screen{
         .title = params.title,
         .width = params.width,
         .height = params.height,
         .rate = params.rate,
-        ._em = Globals.getAll().eventManager,
+        ._em = eventManager,
     };
 }
 
@@ -81,8 +85,7 @@ pub fn open(self: *Screen) !void {
         return error.SDLInitializationFailed;
     };
 
-    Globals.setActiveWindow(self._window); // TODO: This should be handled in the event-manager. Or at least, by using it.
-    try Globals.getAll().phyzxEngine.start();
+    if (self._em) |em| em.setActiveWindow(self._window);
 
     self._renderer = sdl.SDL_CreateRenderer(self._window, null) orelse {
         sdl.SDL_Log("Unable to create renderer: %s", sdl.SDL_GetError());
@@ -100,8 +103,10 @@ pub fn open(self: *Screen) !void {
 fn update(self: *Screen) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
 
-    const event = try self._em.invokeEventLoop();
-    if (event.type == sdl.SDL_EVENT_QUIT) return try self.close();
+    if (self._em) |em| {
+        const event = try em.invokeEventLoop();
+        if (event.type == sdl.SDL_EVENT_QUIT) return try self.close();
+    }
 
     _ = sdl.SDL_RenderClear(self._renderer);
     if (self._scene) |s| try s.update(self._renderer.?);

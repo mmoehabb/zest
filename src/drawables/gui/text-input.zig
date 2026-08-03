@@ -4,6 +4,7 @@
 const std = @import("std");
 const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
+const plugins = @import("../../plugins/mod.zig");
 const types = @import("../../types/mod.zig");
 
 const TextInput = @This();
@@ -46,25 +47,31 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
     .draw = draw,
     .destroy = destroy,
 },
+_em: ?*plugins.EventManager = null,
 
 pub fn new(allocator: std.mem.Allocator, t: TextInput) !TextInput {
-    const buf = try allocator.alloc(u8, t.max_len + 1);
-    @memset(buf, 0);
-    return TextInput{
-        .placeholder = t.placeholder,
-        .dim = t.dim,
-        .bg_color = t.bg_color,
-        .border_color = t.border_color,
-        .focused_border_color = t.focused_border_color,
-        .text_color = t.text_color,
-        .placeholder_color = t.placeholder_color,
-        .font_path = t.font_path,
-        .font_size = t.font_size,
-        .max_len = t.max_len,
-        ._allocator = allocator,
-        ._text = buf,
-        .on_change = t.on_change,
-    };
+    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+        const buf = try allocator.alloc(u8, t.max_len + 1);
+        @memset(buf, 0);
+        return TextInput{
+            .placeholder = t.placeholder,
+            .dim = t.dim,
+            .bg_color = t.bg_color,
+            .border_color = t.border_color,
+            .focused_border_color = t.focused_border_color,
+            .text_color = t.text_color,
+            .placeholder_color = t.placeholder_color,
+            .font_path = t.font_path,
+            .font_size = t.font_size,
+            .max_len = t.max_len,
+            ._allocator = allocator,
+            ._text = buf,
+            .on_change = t.on_change,
+            ._em = em,
+        };
+    }
+    std.log.err("TextInput.new: EventManager plugin is required!", .{});
+    return error.EventManagerRequired;
 }
 
 pub fn toDrawable(self: *TextInput) modules.Drawable {
@@ -124,9 +131,8 @@ fn draw(
 ) !void {
     const self = @as(*TextInput, @constCast(@fieldParentPtr("_draw_strategy", ds)));
 
-    var em = modules.Globals.getAll().eventManager;
-    const mouse_pos = em.getMousePos();
-    const mouse_down = em.isMouseDown();
+    const mouse_pos = self._em.?.getMousePos();
+    const mouse_down = self._em.?.isMouseDown();
 
     const inside = mouse_pos.x >= pos.x and mouse_pos.x <= pos.x + dim.w and
         mouse_pos.y >= pos.y and mouse_pos.y <= pos.y + dim.h;
@@ -155,11 +161,11 @@ fn draw(
 
     if (self.focused) {
         if (!self._text_input_active) {
-            _ = sdl.SDL_StartTextInput(modules.Globals.getAll().activeWindow);
+            _ = sdl.SDL_StartTextInput(self._em.?._activeWindow);
             self._text_input_active = true;
         }
 
-        const typed = em.drainTextInput();
+        const typed = self._em.?.drainTextInput();
         if (typed.len > 0) {
             const cap = self.max_len - self.len;
             const take = @min(typed.len, cap);
@@ -172,7 +178,7 @@ fn draw(
             }
         }
 
-        const bs_down = em.isKeyDown(.Backspace);
+        const bs_down = self._em.?.isKeyDown(.Backspace);
         if (bs_down and !self._prev_bs_down and self.len > 0) {
             const removed_len = utf8BackOne(self._text[0..self.len]);
             self.len -= removed_len;

@@ -4,9 +4,22 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var phyzxEngine = zigsdl.plugins.PhyzxEngine.init(allocator, init.io);
+    try phyzxEngine.start();
+    defer phyzxEngine.deinit();
 
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+
+    // Initialize the plugin manager
+    const pm = zigsdl.modules.PluginManager;
+    try pm.init(allocator);
+    try pm.add(&phyzxEngine, "PhyzxEngine");
+    try pm.add(&eventManager, "EventManager");
+    defer pm.deinit();
+
+    // Create boxes and terrain objects
     var rect = zigsdl.drawables.Rect.new(
         .{ .w = 20, .h = 20, .d = 1 },
         .{ .r = 255 },

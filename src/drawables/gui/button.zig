@@ -4,6 +4,7 @@
 const std = @import("std");
 const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
+const plugins = @import("../../plugins/mod.zig");
 const types = @import("../../types/mod.zig");
 
 const Button = @This();
@@ -27,24 +28,30 @@ _prev_mouse_down: bool = false,
 _texture: ?[*c]sdl.SDL_Texture = null,
 _last_label: []const u8 = "",
 _last_color: types.Color = .{},
+_em: ?*plugins.EventManager = null,
 
 _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
     .draw = draw,
     .destroy = destroy,
 },
 
-pub fn new(b: Button) Button {
-    return Button{
-        .label = b.label,
-        .dim = b.dim,
-        .color = b.color,
-        .hover_color = b.hover_color,
-        .pressed_color = b.pressed_color,
-        .text_color = b.text_color,
-        .font_path = b.font_path,
-        .font_size = b.font_size,
-        .on_click = b.on_click,
-    };
+pub fn new(b: Button) !Button {
+    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+        return Button{
+            .label = b.label,
+            .dim = b.dim,
+            .color = b.color,
+            .hover_color = b.hover_color,
+            .pressed_color = b.pressed_color,
+            .text_color = b.text_color,
+            .font_path = b.font_path,
+            .font_size = b.font_size,
+            .on_click = b.on_click,
+            ._em = em,
+        };
+    }
+    std.log.err("Button.new: EventManager plugin is required!", .{});
+    return error.EventManagerRequired;
 }
 
 pub fn toDrawable(self: *Button) modules.Drawable {
@@ -109,9 +116,8 @@ fn draw(
 ) !void {
     const self = @as(*Button, @constCast(@fieldParentPtr("_draw_strategy", ds)));
 
-    var em = modules.Globals.getAll().eventManager;
-    const mouse_pos = em.getMousePos();
-    const mouse_down = em.isMouseDown();
+    const mouse_pos = self._em.?.getMousePos();
+    const mouse_down = self._em.?.isMouseDown();
 
     const inside = mouse_pos.x >= pos.x and mouse_pos.x <= pos.x + dim.w and
         mouse_pos.y >= pos.y and mouse_pos.y <= pos.y + dim.h;

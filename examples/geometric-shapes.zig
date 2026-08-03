@@ -4,8 +4,16 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+    var stringFactory = try zigsdl.plugins.StringFactory.init(allocator);
+    defer stringFactory.deinit();
+
+    try zigsdl.modules.PluginManager.init(allocator);
+    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
+    try zigsdl.modules.PluginManager.add(&stringFactory, "StringFactory");
+    defer zigsdl.modules.PluginManager.deinit();
 
     // A Green Rectangle
     var rect = zigsdl.drawables.Rect.new(

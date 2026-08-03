@@ -1,9 +1,9 @@
 const std = @import("std");
-const Object = @import("../object.zig");
-const Mesh = @import("../../scripts/mesh.zig");
-const Face = @import("../../types/face.zig");
-const Collision = @import("../../types/collision.zig");
-const Position = @import("../../types/position.zig");
+const Object = @import("../modules/object.zig");
+const Mesh = @import("../scripts/mesh.zig");
+const Face = @import("../types/face.zig");
+const Collision = @import("../types/collision.zig");
+const Position = @import("../types/position.zig");
 
 const PhyzxEngine = @This();
 

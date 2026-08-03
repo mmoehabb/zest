@@ -4,6 +4,7 @@
 const std = @import("std");
 const sdl = @import("sdl");
 const modules = @import("../../modules/mod.zig");
+const plugins = @import("../../plugins/mod.zig");
 const types = @import("../../types/mod.zig");
 
 const Select = @This();
@@ -43,23 +44,29 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
     .draw = draw,
     .destroy = destroy,
 },
+_em: ?*plugins.EventManager = null,
 
 pub fn new(allocator: std.mem.Allocator, s: Select) !Select {
-    return Select{
-        .options = s.options,
-        .dim = s.dim,
-        .bg_color = s.bg_color,
-        .hover_color = s.hover_color,
-        .open_color = s.open_color,
-        .option_hover_color = s.option_hover_color,
-        .border_color = s.border_color,
-        .text_color = s.text_color,
-        .font_path = s.font_path,
-        .font_size = s.font_size,
-        .selected_index = s.selected_index,
-        .on_change = s.on_change,
-        ._allocator = allocator,
-    };
+    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+        return Select{
+            .options = s.options,
+            .dim = s.dim,
+            .bg_color = s.bg_color,
+            .hover_color = s.hover_color,
+            .open_color = s.open_color,
+            .option_hover_color = s.option_hover_color,
+            .border_color = s.border_color,
+            .text_color = s.text_color,
+            .font_path = s.font_path,
+            .font_size = s.font_size,
+            .selected_index = s.selected_index,
+            .on_change = s.on_change,
+            ._allocator = allocator,
+            ._em = em,
+        };
+    }
+    std.log.err("Select.new: EventManager plugin is required!", .{});
+    return error.EventManagerRequired;
 }
 
 pub fn toDrawable(self: *Select) modules.Drawable {
@@ -152,9 +159,8 @@ fn draw(
 
     if (!self._built) try self.buildOptionTextures(renderer);
 
-    var em = modules.Globals.getAll().eventManager;
-    const mouse_pos = em.getMousePos();
-    const mouse_down = em.isMouseDown();
+    const mouse_pos = self._em.?.getMousePos();
+    const mouse_down = self._em.?.isMouseDown();
 
     const trigger_inside = mouse_pos.x >= pos.x and mouse_pos.x <= pos.x + dim.w and
         mouse_pos.y >= pos.y and mouse_pos.y <= pos.y + dim.h;

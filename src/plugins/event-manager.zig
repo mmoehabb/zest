@@ -5,9 +5,9 @@
 const std = @import("std");
 const sdl = @import("sdl");
 
-const types = @import("../../types/mod.zig");
-const Key = @import("../../types/event.zig").Key;
-const KeyState = @import("../../types/event.zig").KeyState;
+const types = @import("../types/mod.zig");
+const Key = @import("../types/event.zig").Key;
+const KeyState = @import("../types/event.zig").KeyState;
 
 const EventManager = @This();
 
@@ -17,6 +17,7 @@ _allocator: std.mem.Allocator,
 
 _text_input_buf: [32]u8 = @splat(0),
 _text_input_cursor: usize = 0,
+_activeWindow: ?*sdl.SDL_Window = null,
 
 pub fn init(allocator: std.mem.Allocator) EventManager {
     return EventManager{
@@ -53,6 +54,10 @@ pub fn isMouseDown(self: *EventManager) bool {
 
 pub fn isMouseUp(self: *EventManager) bool {
     return self.isKeyUp(.LeftMouse);
+}
+
+pub fn setActiveWindow(self: *EventManager, window: ?*sdl.SDL_Window) void {
+    self._activeWindow = window;
 }
 
 /// Returns and clears the text typed since the last call. Each call returns the
