@@ -13,10 +13,10 @@ gravity: bool = false,
 static: bool = false,
 
 _G: f32 = 0.005, // The Gravitational Constant
-_vel: types.Position = .{}, // Velocity
-_acc: types.Position = .{}, // Acceleration
-_pfr: types.Position = .{}, // Frictions of the position directions
-_nfr: types.Position = .{}, // Frictions of the negative directions
+_vel: types.Vector = .{}, // Velocity
+_acc: types.Vector = .{}, // Acceleration
+_pfr: types.Vector = .{}, // Frictions of the position directions
+_nfr: types.Vector = .{}, // Frictions of the negative directions
 _collisions: std.ArrayList(types.Collision) = .empty,
 
 _allocator: std.mem.Allocator,
@@ -123,7 +123,7 @@ fn end(_: *modules.Script, _: *modules.Object) void {}
 
 /// Apply force to the object and get a reaction force.
 /// NOTE: this mutates the inner state.
-pub fn applyForce(self: *Rigidbody, f: types.Position) types.Position {
+pub fn applyForce(self: *Rigidbody, f: types.Vector) types.Vector {
     if (self.static) return f.multiply(-1);
     const res = self._acc.subtract(f);
     self._acc = self._acc.add(f);
@@ -132,7 +132,7 @@ pub fn applyForce(self: *Rigidbody, f: types.Position) types.Position {
 
 /// Apply momentum to the object and get a reaction momentum.
 /// NOTE: this mutates the inner state.
-pub fn applyMomentum(self: *Rigidbody, f: types.Position) types.Position {
+pub fn applyMomentum(self: *Rigidbody, f: types.Vector) types.Vector {
     if (self.static) return f.multiply(-1);
     self._vel = self._vel.add(f);
     return self._vel;

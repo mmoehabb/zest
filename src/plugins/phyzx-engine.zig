@@ -3,7 +3,7 @@ const Object = @import("../modules/object.zig");
 const Mesh = @import("../scripts/mesh.zig");
 const Face = @import("../types/face.zig");
 const Collision = @import("../types/collision.zig");
-const Position = @import("../types/position.zig");
+const Vector = @import("../types/vector.zig");
 
 const PhyzxEngine = @This();
 
@@ -127,7 +127,7 @@ fn detectCollisionAsync(self: *PhyzxEngine) void {
             const cA = self._collision_map.getOrPutValue(A.owner, .empty) catch unreachable;
             const cB = self._collision_map.getOrPutValue(B.owner, .empty) catch unreachable;
 
-            for ([4]Position{ absA.p1, absA.p2, absA.p3, absA.p4 }) |p| {
+            for ([4]Vector{ absA.p1, absA.p2, absA.p3, absA.p4 }) |p| {
                 // Skip if there is no possible collision
                 if (!absB.isPCP(p)) continue;
 

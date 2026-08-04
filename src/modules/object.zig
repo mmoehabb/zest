@@ -15,10 +15,10 @@ const Drawable = @import("./drawable.zig").Drawable;
 const Object = @This();
 
 /// The position of the object relative to its parent.
-position: types.Position,
+position: types.Vector,
 
 /// The rotation of the object relative to its parent.
-rotation: types.Rotation,
+rotation: types.Vector,
 
 /// Unique name for the object, by which it can be retrieved from the parent.
 name: []const u8,
@@ -44,8 +44,8 @@ _active: bool,
 pub fn init(
     allocator: std.mem.Allocator,
     props: struct {
-        position: types.Position = types.Position{},
-        rotation: types.Rotation = types.Rotation{},
+        position: types.Vector = .{},
+        rotation: types.Vector = .{},
         name: []const u8 = "unnamed",
         tag: []const u8 = "untagged",
         active: bool = true,
@@ -132,23 +132,23 @@ pub fn setDrawable(self: *Object, drawable: *Drawable) void {
     self.drawable = drawable;
 }
 
-pub fn getAbsPosition(self: *Object) types.Position {
-    const parentPos = if (self._parent) |obj| obj.position else types.Position{};
+pub fn getAbsPosition(self: *Object) types.Vector {
+    const parentPos = if (self._parent) |obj| obj.position else types.Vector{};
     return self.position.add(parentPos);
 }
 
-pub fn setAbsPosition(self: *Object, pos: types.Position) void {
-    const parentPos = if (self._parent) |obj| obj.position else types.Position{};
+pub fn setAbsPosition(self: *Object, pos: types.Vector) void {
+    const parentPos = if (self._parent) |obj| obj.position else types.Vector{};
     self.position = pos.subtract(parentPos);
 }
 
-pub fn getAbsRotation(self: *Object) types.Rotation {
-    const parentRot = if (self._parent) |obj| obj.rotation else types.Rotation{};
+pub fn getAbsRotation(self: *Object) types.Vector {
+    const parentRot = if (self._parent) |obj| obj.rotation else types.Vector{};
     return self.rotation.add(parentRot);
 }
 
-pub fn setAbsRotation(self: *Object, rot: types.Rotation) void {
-    const parentRot = if (self._parent) |obj| obj.rotation else types.Rotation{};
+pub fn setAbsRotation(self: *Object, rot: types.Vector) void {
+    const parentRot = if (self._parent) |obj| obj.rotation else types.Vector{};
     self.rotation = rot.subtract(parentRot);
 }
 

@@ -1,18 +1,18 @@
 //! A rectangular shape used for constructing the mesh.
 //! NOTE: each point is located relative to the owner (object) position.
 const std = @import("std");
-const Position = @import("./position.zig");
+const Vector = @import("./vector.zig");
 const Object = @import("../modules/object.zig");
 
 const Face = @This();
 
-p1: Position = .{},
-p2: Position = .{},
-p3: Position = .{},
-p4: Position = .{},
+p1: Vector = .{},
+p2: Vector = .{},
+p3: Vector = .{},
+p4: Vector = .{},
 owner: *Object,
 
-pub fn add(self: Face, p: Position) Face {
+pub fn add(self: Face, p: Vector) Face {
     return .{
         .p1 = self.p1.add(p),
         .p2 = self.p2.add(p),
@@ -22,7 +22,7 @@ pub fn add(self: Face, p: Position) Face {
     };
 }
 
-pub fn subtract(self: Face, p: Position) Face {
+pub fn subtract(self: Face, p: Vector) Face {
     return .{
         .p1 = self.p1.subtract(p),
         .p2 = self.p2.subtract(p),
@@ -42,7 +42,7 @@ pub fn calCircum(self: Face) f32 {
 }
 
 /// Return true if _p_ collides, or about to collides, the face.
-pub fn isPCP(self: Face, p: Position) bool {
+pub fn isPCP(self: Face, p: Vector) bool {
     var mr = self.subtract(p);
     mr.p1 = mr.p1.divide(mr.p1.abs());
     mr.p2 = mr.p2.divide(mr.p2.abs());
@@ -59,7 +59,7 @@ pub fn isPCP(self: Face, p: Position) bool {
     return @floor(v.x) + @floor(v.y) + @floor(v.z) == 0;
 }
 
-pub fn closestVertexTo(self: Face, p: Position) Position {
+pub fn closestVertexTo(self: Face, p: Vector) Vector {
     const l1 = self.p1.subtract(p).magnitude();
     const l2 = self.p2.subtract(p).magnitude();
     const l3 = self.p3.subtract(p).magnitude();
@@ -76,13 +76,13 @@ pub fn closestVertexTo(self: Face, p: Position) Position {
 
 /// Return an alternative face where the face closest point to _p_ is
 /// substituted with _p_.
-pub fn getAlter(self: Face, p: Position) Face {
+pub fn getAlter(self: Face, p: Vector) Face {
     const closest = self.closestVertexTo(p);
     return self.replaceVertexWith(closest, p);
 }
 
 /// Return a cloned Face where _v_ is substituted with _p_.
-pub fn replaceVertexWith(self: Face, v: Position, p: Position) Face {
+pub fn replaceVertexWith(self: Face, v: Vector, p: Vector) Face {
     return .{
         .p1 = if (!v.isEql(self.p1)) self.p1 else p,
         .p2 = if (!v.isEql(self.p2)) self.p2 else p,
@@ -93,7 +93,7 @@ pub fn replaceVertexWith(self: Face, v: Position, p: Position) Face {
 }
 
 /// Returns true if point _p_ falls within (or on) the face.
-pub fn contains(self: *Face, p: Position) bool {
+pub fn contains(self: *Face, p: Vector) bool {
     const absFace = self.add(self.owner.position);
     if (!absFace.isPCP(p)) return false;
     const origCircum = absFace.calCircum();

@@ -52,8 +52,8 @@ fn draw(
     drawable: *modules.Drawable,
     ds: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Position,
-    rot: types.Rotation,
+    pos: types.Vector,
+    rot: types.Vector,
     _: types.Dimensions,
 ) !void {
     const self = @as(*Text, @constCast(@fieldParentPtr("_draw_strategy", ds)));
