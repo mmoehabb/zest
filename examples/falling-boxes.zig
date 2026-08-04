@@ -5,9 +5,9 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     // Define and add plugins
-    var phyzxEngine = zigsdl.plugins.PhyzxEngine.init(allocator, init.io);
-    try phyzxEngine.start();
-    defer phyzxEngine.deinit();
+    var collisionDetector = zigsdl.plugins.CollisionDetector.init(allocator, init.io);
+    try collisionDetector.start();
+    defer collisionDetector.deinit();
 
     var eventManager = zigsdl.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
@@ -15,7 +15,7 @@ pub fn main(init: std.process.Init) !void {
     // Initialize the plugin manager
     const pm = zigsdl.modules.PluginManager;
     try pm.init(allocator);
-    try pm.add(&phyzxEngine, "PhyzxEngine");
+    try pm.add(&collisionDetector, "CollisionDetector");
     try pm.add(&eventManager, "EventManager");
     defer pm.deinit();
 
@@ -111,7 +111,7 @@ const Box = struct {
         allocator: std.mem.Allocator,
         drawable: *zigsdl.modules.Drawable,
         name: []const u8,
-        p: zigsdl.types.Position,
+        p: zigsdl.types.Vector,
     ) !*Box {
         var box = try allocator.create(Box);
         box._allocator = allocator;

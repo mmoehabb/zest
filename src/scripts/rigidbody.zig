@@ -21,7 +21,7 @@ _collisions: std.ArrayList(types.Collision) = .empty,
 
 _allocator: std.mem.Allocator,
 _script_strategy: modules.ScriptStrategy,
-_phyzxEngine: ?*plugins.PhyzxEngine = null,
+_collisionDetector: ?*plugins.CollisionDetector = null,
 
 pub fn init(data: struct {
     allocator: std.mem.Allocator,
@@ -39,7 +39,7 @@ pub fn init(data: struct {
         .update = update,
         .end = end,
     };
-    rigidbody._phyzxEngine = null;
+    rigidbody._collisionDetector = null;
     rigidbody._collisions = .empty;
     rigidbody._vel = .{};
     rigidbody._acc = .{};
@@ -63,7 +63,7 @@ fn start(s: *modules.Script, _: *modules.Object) void {
     const self = @as(*Rigidbody, @constCast(
         @fieldParentPtr("_script_strategy", s.strategy),
     ));
-    self._phyzxEngine = modules.PluginManager.get(plugins.PhyzxEngine, "PhyzxEngine");
+    self._collisionDetector = modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector");
     if (self.static) {
         self._pfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
         self._nfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
@@ -96,7 +96,7 @@ fn update(s: *modules.Script, obj: *modules.Object) void {
 
     // Detect collision, reslove jamming, and calculate frictions
     self._collisions.clearRetainingCapacity();
-    self._phyzxEngine.?.getCollisions(obj, &self._collisions) catch unreachable;
+    self._collisionDetector.?.getCollisions(obj, &self._collisions) catch unreachable;
 
     for (self._collisions.items) |collision| {
         const cobj = collision.face.owner;
