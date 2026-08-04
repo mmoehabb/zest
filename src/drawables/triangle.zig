@@ -34,8 +34,8 @@ fn draw(
     drawable: *modules.Drawable,
     _: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Position,
-    rot: types.Rotation,
+    pos: types.Vector,
+    rot: types.Vector,
     dim: types.Dimensions,
 ) !void {
     const color: sdl.SDL_FColor = .{

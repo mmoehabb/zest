@@ -54,8 +54,8 @@ fn draw(
     drawable: *modules.Drawable,
     ds: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Position,
-    _: types.Rotation,
+    pos: types.Vector,
+    _: types.Vector,
     dim: types.Dimensions,
 ) !void {
     const self = @as(*SVG, @constCast(@fieldParentPtr("_draw_strategy", ds)));

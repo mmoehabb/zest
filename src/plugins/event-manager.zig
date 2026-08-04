@@ -12,7 +12,7 @@ const KeyState = @import("../types/event.zig").KeyState;
 const EventManager = @This();
 
 _keys: std.AutoHashMap(Key, KeyState),
-_mouse_pos: types.Position = types.Position{},
+_mouse_pos: types.Vector = types.Vector{},
 _allocator: std.mem.Allocator,
 
 _text_input_buf: [32]u8 = @splat(0),
@@ -44,7 +44,7 @@ pub fn isKeyUp(self: *EventManager, key: Key) bool {
     return state == .Up;
 }
 
-pub fn getMousePos(self: *EventManager) types.Position {
+pub fn getMousePos(self: *EventManager) types.Vector {
     return self._mouse_pos;
 }
 

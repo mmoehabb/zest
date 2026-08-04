@@ -1,13 +1,13 @@
 // TODO: improve the performance of these methods by using zig vectors (SIMD).
 
 const std = @import("std");
-const Position = @This();
+const Vector = @This();
 
 x: f32 = 0,
 y: f32 = 0,
 z: f32 = 0,
 
-pub fn add(self: Position, pos: Position) Position {
+pub fn add(self: Vector, pos: Vector) Vector {
     return .{
         .x = self.x + pos.x,
         .y = self.y + pos.y,
@@ -15,7 +15,7 @@ pub fn add(self: Position, pos: Position) Position {
     };
 }
 
-pub fn subtract(self: Position, pos: Position) Position {
+pub fn subtract(self: Vector, pos: Vector) Vector {
     return .{
         .x = self.x - pos.x,
         .y = self.y - pos.y,
@@ -23,7 +23,7 @@ pub fn subtract(self: Position, pos: Position) Position {
     };
 }
 
-pub fn multiply(self: Position, operand: f32) Position {
+pub fn multiply(self: Vector, operand: f32) Vector {
     return .{
         .x = self.x * operand,
         .y = self.y * operand,
@@ -31,7 +31,7 @@ pub fn multiply(self: Position, operand: f32) Position {
     };
 }
 
-pub fn dot(self: Position, p: Position) Position {
+pub fn dot(self: Vector, p: Vector) Vector {
     return .{
         .x = self.x * p.x,
         .y = self.y * p.y,
@@ -39,14 +39,14 @@ pub fn dot(self: Position, p: Position) Position {
     };
 }
 
-pub fn magnitude(self: Position) f32 {
+pub fn magnitude(self: Vector) f32 {
     const x = std.math.pow(f32, self.x, 2);
     const y = std.math.pow(f32, self.y, 2);
     const z = std.math.pow(f32, self.z, 2);
     return @sqrt(x + y + z);
 }
 
-pub fn abs(self: Position) Position {
+pub fn abs(self: Vector) Vector {
     return .{
         .x = @abs(self.x),
         .y = @abs(self.y),
@@ -54,7 +54,7 @@ pub fn abs(self: Position) Position {
     };
 }
 
-pub fn divide(self: Position, p: Position) Position {
+pub fn divide(self: Vector, p: Vector) Vector {
     return .{
         .x = if (p.x > 0) self.x / p.x else 0,
         .y = if (p.y > 0) self.y / p.y else 0,
@@ -62,6 +62,6 @@ pub fn divide(self: Position, p: Position) Position {
     };
 }
 
-pub fn isEql(self: Position, p: Position) bool {
+pub fn isEql(self: Vector, p: Vector) bool {
     return self.x == p.x and self.y == p.y and self.z == p.z;
 }

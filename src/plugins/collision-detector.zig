@@ -3,9 +3,9 @@ const Object = @import("../modules/object.zig");
 const Mesh = @import("../scripts/mesh.zig");
 const Face = @import("../types/face.zig");
 const Collision = @import("../types/collision.zig");
-const Position = @import("../types/position.zig");
+const Vector = @import("../types/vector.zig");
 
-const PhyzxEngine = @This();
+const CollisionDetector = @This();
 
 _io: std.Io,
 _allocator: std.mem.Allocator,
@@ -25,8 +25,8 @@ _faces: std.ArrayList(Face) = .empty,
 /// Used before retrieving or manipulating any state (data) used in the detection thread.
 _state_mutex: std.Io.Mutex = .init,
 
-pub fn init(allocator: std.mem.Allocator, io: std.Io) PhyzxEngine {
-    return PhyzxEngine{
+pub fn init(allocator: std.mem.Allocator, io: std.Io) CollisionDetector {
+    return CollisionDetector{
         ._io = io,
         ._allocator = allocator,
         ._collision_map = std.AutoHashMap(
@@ -36,7 +36,7 @@ pub fn init(allocator: std.mem.Allocator, io: std.Io) PhyzxEngine {
     };
 }
 
-pub fn deinit(self: *PhyzxEngine) void {
+pub fn deinit(self: *CollisionDetector) void {
     self._deinitializing = true;
     if (self._thread) |thread| thread.join();
 
@@ -48,19 +48,19 @@ pub fn deinit(self: *PhyzxEngine) void {
     self._faces.deinit(self._allocator);
 }
 
-pub fn start(self: *PhyzxEngine) !void {
+pub fn start(self: *CollisionDetector) !void {
     self._thread = try std.Thread.spawn(.{}, detectCollisionThread, .{self});
 }
 
 /// Add object to the collection on which the collision detector shall operate.
-pub fn addObject(self: *PhyzxEngine, obj: *Object) !void {
+pub fn addObject(self: *CollisionDetector, obj: *Object) !void {
     try self._state_mutex.lock(self._io);
     defer self._state_mutex.unlock(self._io);
     try self._objects.append(self._allocator, obj);
 }
 
 /// Remove object from the collection on which the collision detector shall operate.
-pub fn rmvObject(self: *PhyzxEngine, obj: *Object) void {
+pub fn rmvObject(self: *CollisionDetector, obj: *Object) void {
     self._state_mutex.lock(self._io) catch unreachable;
     defer self._state_mutex.unlock(self._io);
     var index: ?usize = null;
@@ -75,14 +75,14 @@ pub fn rmvObject(self: *PhyzxEngine, obj: *Object) void {
 
 /// Get a slice of objects that collides with the passed _obj_ parameter, and append
 /// them into the passed _arr_.
-pub fn getCollisions(self: *PhyzxEngine, obj: *Object, arr: *std.ArrayList(Collision)) !void {
+pub fn getCollisions(self: *CollisionDetector, obj: *Object, arr: *std.ArrayList(Collision)) !void {
     try self._state_mutex.lock(self._io);
     defer self._state_mutex.unlock(self._io);
     const res = try self._collision_map.getOrPutValue(obj, .empty);
     try arr.appendSlice(self._allocator, res.value_ptr.items);
 }
 
-fn detectCollisionThread(self: *PhyzxEngine) void {
+fn detectCollisionThread(self: *CollisionDetector) void {
     var f = self._io.async(detectCollisionAsync, .{self});
     f.await(self._io);
     if (!self._deinitializing) return self.detectCollisionThread();
@@ -90,7 +90,7 @@ fn detectCollisionThread(self: *PhyzxEngine) void {
 
 // TODO: enhance this by invoking it only upon requests; if there is no
 // components calling getCollisions, then no need for these computations.
-fn detectCollisionAsync(self: *PhyzxEngine) void {
+fn detectCollisionAsync(self: *CollisionDetector) void {
     if (self._deinitializing) return;
     self._io.sleep(.fromMilliseconds(16), .awake) catch {
         std.log.err("phyzx-engine: Io Sleep Failed!", .{});
@@ -127,7 +127,7 @@ fn detectCollisionAsync(self: *PhyzxEngine) void {
             const cA = self._collision_map.getOrPutValue(A.owner, .empty) catch unreachable;
             const cB = self._collision_map.getOrPutValue(B.owner, .empty) catch unreachable;
 
-            for ([4]Position{ absA.p1, absA.p2, absA.p3, absA.p4 }) |p| {
+            for ([4]Vector{ absA.p1, absA.p2, absA.p3, absA.p4 }) |p| {
                 // Skip if there is no possible collision
                 if (!absB.isPCP(p)) continue;
 

@@ -13,15 +13,15 @@ gravity: bool = false,
 static: bool = false,
 
 _G: f32 = 0.005, // The Gravitational Constant
-_vel: types.Position = .{}, // Velocity
-_acc: types.Position = .{}, // Acceleration
-_pfr: types.Position = .{}, // Frictions of the position directions
-_nfr: types.Position = .{}, // Frictions of the negative directions
+_vel: types.Vector = .{}, // Velocity
+_acc: types.Vector = .{}, // Acceleration
+_pfr: types.Vector = .{}, // Frictions of the position directions
+_nfr: types.Vector = .{}, // Frictions of the negative directions
 _collisions: std.ArrayList(types.Collision) = .empty,
 
 _allocator: std.mem.Allocator,
 _script_strategy: modules.ScriptStrategy,
-_phyzxEngine: ?*plugins.PhyzxEngine = null,
+_collisionDetector: ?*plugins.CollisionDetector = null,
 
 pub fn init(data: struct {
     allocator: std.mem.Allocator,
@@ -39,7 +39,7 @@ pub fn init(data: struct {
         .update = update,
         .end = end,
     };
-    rigidbody._phyzxEngine = null;
+    rigidbody._collisionDetector = null;
     rigidbody._collisions = .empty;
     rigidbody._vel = .{};
     rigidbody._acc = .{};
@@ -63,7 +63,7 @@ fn start(s: *modules.Script, _: *modules.Object) void {
     const self = @as(*Rigidbody, @constCast(
         @fieldParentPtr("_script_strategy", s.strategy),
     ));
-    self._phyzxEngine = modules.PluginManager.get(plugins.PhyzxEngine, "PhyzxEngine");
+    self._collisionDetector = modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector");
     if (self.static) {
         self._pfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
         self._nfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
@@ -96,7 +96,7 @@ fn update(s: *modules.Script, obj: *modules.Object) void {
 
     // Detect collision, reslove jamming, and calculate frictions
     self._collisions.clearRetainingCapacity();
-    self._phyzxEngine.?.getCollisions(obj, &self._collisions) catch unreachable;
+    self._collisionDetector.?.getCollisions(obj, &self._collisions) catch unreachable;
 
     for (self._collisions.items) |collision| {
         const cobj = collision.face.owner;
@@ -123,7 +123,7 @@ fn end(_: *modules.Script, _: *modules.Object) void {}
 
 /// Apply force to the object and get a reaction force.
 /// NOTE: this mutates the inner state.
-pub fn applyForce(self: *Rigidbody, f: types.Position) types.Position {
+pub fn applyForce(self: *Rigidbody, f: types.Vector) types.Vector {
     if (self.static) return f.multiply(-1);
     const res = self._acc.subtract(f);
     self._acc = self._acc.add(f);
@@ -132,7 +132,7 @@ pub fn applyForce(self: *Rigidbody, f: types.Position) types.Position {
 
 /// Apply momentum to the object and get a reaction momentum.
 /// NOTE: this mutates the inner state.
-pub fn applyMomentum(self: *Rigidbody, f: types.Position) types.Position {
+pub fn applyMomentum(self: *Rigidbody, f: types.Vector) types.Vector {
     if (self.static) return f.multiply(-1);
     self._vel = self._vel.add(f);
     return self._vel;

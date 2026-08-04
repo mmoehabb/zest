@@ -12,7 +12,7 @@ const types = @import("../types/mod.zig");
 const Scene = @This();
 
 screen: ?*Screen,
-origin: types.Position = types.Position{},
+origin: types.Vector = types.Vector{},
 scale: f32 = 1.00,
 
 /// The scene [lifecycle](#root.types.lifecycle).
@@ -72,7 +72,7 @@ pub fn setScreen(self: *Scene, screen: *Screen) void {
 /// ```
 /// This moves _obj1_ by 20 units to the right.
 /// NOTICE: it doesn't move **to** position _p_.
-pub fn move(self: *Scene, p: types.Position) void {
+pub fn move(self: *Scene, p: types.Vector) void {
     self.origin = self.origin.add(p);
 }
 
