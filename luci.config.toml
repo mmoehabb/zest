@@ -3,7 +3,7 @@ description = "A fast simple way to explore and execute available zig build comm
 
 ["*"]
 format = "zig fmt ."
-test = "zig build test"
+test = "zig build test --summary all --verbose"
 build = "zig build"
 run-examples = """
 zig build example:hello-world &&

@@ -12,4 +12,5 @@ pub const scripts = @import("scripts/mod.zig");
 
 test {
     @import("std").testing.refAllDecls(modules);
+    @import("std").testing.refAllDecls(plugins);
 }
