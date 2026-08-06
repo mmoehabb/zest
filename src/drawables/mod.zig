@@ -1,4 +1,4 @@
-//! zigsdl predefined drawables.
+//! zest predefined drawables.
 
 pub const Rect = @import("rect.zig");
 pub const Ellipse = @import("eclipse.zig");

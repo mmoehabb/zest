@@ -63,12 +63,12 @@ fn draw(
     const texture = self._texture orelse blk: {
         if (self.content.len > 0) {
             // Create a temporary file of the svg content
-            const file = std.Io.Dir.createFileAbsolute(self.io, "/tmp/zigsdl.tmp.svg", .{}) catch return error.InvalidInputs;
+            const file = std.Io.Dir.createFileAbsolute(self.io, "/tmp/zest.tmp.svg", .{}) catch return error.InvalidInputs;
             defer file.close(self.io);
             file.writeStreamingAll(self.io, self.content) catch unreachable;
 
             // Store the file path into svg_path variable
-            self.path = "/tmp/zigsdl.tmp.svg";
+            self.path = "/tmp/zest.tmp.svg";
 
             // Ensure the temp file is being cleaned up
             // NOTE: it's being removed in the destroy method below
