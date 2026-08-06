@@ -1,22 +1,22 @@
-const zigsdl = @import("zigsdl");
+const zest = @import("zest");
 const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     // Define and add plugins
-    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
-    var audioManager = try zigsdl.plugins.AudioManager.init(allocator, init.io);
+    var audioManager = try zest.plugins.AudioManager.init(allocator, init.io);
     defer audioManager.deinit();
 
-    try zigsdl.modules.PluginManager.init(allocator);
-    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
-    try zigsdl.modules.PluginManager.add(&audioManager, "AudioManager");
-    defer zigsdl.modules.PluginManager.deinit();
+    try zest.modules.PluginManager.init(allocator);
+    try zest.modules.PluginManager.add(&eventManager, "EventManager");
+    try zest.modules.PluginManager.add(&audioManager, "AudioManager");
+    defer zest.modules.PluginManager.deinit();
 
     // Create sprite object
-    var idle = zigsdl.drawables.Sprite.new(.{
+    var idle = zest.drawables.Sprite.new(.{
         .img_path = "./examples/assets/anim_explosion.png",
         .frames_count = 0,
         .frame_width = 128,
@@ -24,14 +24,14 @@ pub fn main(init: std.process.Init) !void {
     });
     var idle_drawable = idle.toDrawable(.{ .w = 120, .h = 150, .d = 1 }, .{});
 
-    var audioPlayer = try zigsdl.scripts.AudioPlayer.init(
+    var audioPlayer = try zest.scripts.AudioPlayer.init(
         allocator,
         "./examples/assets/explosion.wav",
         false,
     );
     defer audioPlayer.deinit();
 
-    var obj = zigsdl.modules.Object.init(allocator, .{
+    var obj = zest.modules.Object.init(allocator, .{
         .position = .{ .x = 100, .y = 20, .z = 1 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
         .drawable = &idle_drawable,
@@ -40,14 +40,14 @@ pub fn main(init: std.process.Init) !void {
     try obj.addScript(audioPlayer.toScript());
 
     // Create text object
-    var text = zigsdl.drawables.GUI.Text.new(.{
+    var text = zest.drawables.GUI.Text.new(.{
         .text = "Press Space",
         .font_path = "./examples/assets/OpenSans-Regular.ttf",
         .font_size = 24,
     });
     var text_drawable = text.toDrawable();
 
-    var obj2 = zigsdl.modules.Object.init(allocator, .{
+    var obj2 = zest.modules.Object.init(allocator, .{
         .position = .{ .x = 90, .y = 170, .z = 1 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
         .drawable = &text_drawable,
@@ -58,7 +58,7 @@ pub fn main(init: std.process.Init) !void {
     // the drawable changes to explode and the audio plays
     // once the user presses space
     obj.lifecycle.postUpdate = struct {
-        var explode = zigsdl.drawables.Sprite.new(.{
+        var explode = zest.drawables.Sprite.new(.{
             .img_path = "./examples/assets/anim_explosion.png",
             .frames_count = 7,
             .frame_width = 128,
@@ -67,12 +67,12 @@ pub fn main(init: std.process.Init) !void {
         var explode_drawable = explode.toDrawable(.{ .w = 120, .h = 150, .d = 1 }, .{});
 
         var pressed = false;
-        var em: ?*zigsdl.plugins.EventManager = null;
+        var em: ?*zest.plugins.EventManager = null;
 
         fn func(self: *anyopaque) void {
-            const o = @as(*zigsdl.modules.Object, @ptrCast(@alignCast(self)));
-            em = em orelse zigsdl.modules.PluginManager.get(zigsdl.plugins.EventManager, "EventManager").?;
-            var ap = o.getScript(zigsdl.scripts.AudioPlayer, "AudioPlayer");
+            const o = @as(*zest.modules.Object, @ptrCast(@alignCast(self)));
+            em = em orelse zest.modules.PluginManager.get(zest.plugins.EventManager, "EventManager").?;
+            var ap = o.getScript(zest.scripts.AudioPlayer, "AudioPlayer");
 
             if (em.?.isKeyDown(.Space) and !pressed) {
                 _ = ap.?.play() catch unreachable;
@@ -83,13 +83,13 @@ pub fn main(init: std.process.Init) !void {
     }.func;
 
     // Create a scene and add the obj into it
-    var scene = zigsdl.modules.Scene.init(allocator);
+    var scene = zest.modules.Scene.init(allocator);
     defer scene.deinit();
     try scene.addObject(&obj);
     try scene.addObject(&obj2);
 
     // Create a screen, attach the scene to it, and open it
-    var screen = try zigsdl.modules.Screen.init(.{
+    var screen = try zest.modules.Screen.init(.{
         .title = "Simple Game",
         .width = 320,
         .height = 320,

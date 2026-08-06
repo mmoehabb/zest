@@ -1,4 +1,4 @@
-//! This module contains the core components of zigsdl.
+//! This module contains the core components of zest.
 
 pub const Drawable = @import("drawable.zig").Drawable;
 pub const DrawStrategy = @import("drawable.zig").DrawStrategy;

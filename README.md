@@ -1,25 +1,25 @@
-![cova_icon_v2 1](./splash.svg)
+![cova_icon_v2 1](./splash.webp)
 
 [![Static Badge](https://img.shields.io/badge/v0.16.0(stable)-orange?logo=Zig&logoColor=Orange&label=Zig&labelColor=Orange)](https://ziglang.org/download/)
-[![Static Badge](https://img.shields.io/badge/v0.1.1-blue?logo=GitHub&label=Release)](https://github.com/mmoehabb/zigsdl/releases/tag/0.1.1)
-[![Static Badge](https://img.shields.io/badge/MIT-silver?label=License)](https://github.com/mmoehabb/zigsdl/blob/main/LICENSE)
+[![Static Badge](https://img.shields.io/badge/v0.1.1-blue?logo=GitHub&label=Release)](https://github.com/mmoehabb/zest/releases/tag/0.1.1)
+[![Static Badge](https://img.shields.io/badge/MIT-silver?label=License)](https://github.com/mmoehabb/zest/blob/main/LICENSE)
 
 ## About
 
 A relatively easy-to-pick, simple, and straightforward package that developers can use in order to write graphic applications in [Zig](https://ziglang.org/). Just as the name indicates it's build on [SDL3](https://www.libsdl.org/).
 
-- [Install ZigSDL](#install-zigsdl)
+- [Install Zest](#install-zest)
 - [Run an Example](#run-an-example)
 - [Extend the Functionality](#extend-the-functionality)
 - [Install SDL3](#install-sdl3)
 - [TODOs](#todos)
 
-## Install ZigSDL
+## Install Zest
 
-You can use ZigSDL in your zig project by fetching it as follows:
+You can use Zest in your zig project by fetching it as follows:
 
 ```bash
-zig fetch --save git+https://github.com/mmoehabb/zigsdl.git
+zig fetch --save git+https://github.com/mmoehabb/zest.git
 ```
 
 And then add it as an import in your exe root module:
@@ -30,14 +30,14 @@ const exe = b.addExecutable(.{
     .root_module = exe_mod,
 });
 
-const zigsdl_dep = b.dependency("zigsdl", .{
+const zest_dep = b.dependency("zest", .{
     .target = target,
     .optimize = optimize,
 });
 
-const zigsdl_mod = zigsdl_dep.module("zigsdl");
+const zest_mod = zest_dep.module("zest");
 
-exe.root_module.addImport("zigsdl", zigsdl_mod);
+exe.root_module.addImport("zest", zest_mod);
 ```
 
 > Make sure to install SDL3 first.
@@ -46,7 +46,7 @@ exe.root_module.addImport("zigsdl", zigsdl_mod);
 
 First ensure to install SDL3 on your machine, and Zig of course. Choose any example file in the examples directory, and then run it with the following command:
 
-> Note: compatible only with zig versions ^0.17.0
+> Note: compatible only with zig versions ^0.16.0
 
   ```bash
   zig build example:<example-filename>
@@ -61,26 +61,31 @@ For instance:
 
 ## Extend the Functionality
 
-I bet if you gave the code a look, you'd already know how to extend it and make a functional game with ZigSDL. Here's the moving-box zig file:
+I bet if you gave the code a look, you'd already know how to extend it and make a functional game with Zest. Here's the moving-box zig file:
 
 ```zig
-const zigsdl = @import("zigsdl");
+const zest = @import("zest");
 const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    try zigsdl.modules.Globals.init(allocator, init.io);
-    defer zigsdl.modules.Globals.deinit();
+    // Define and add plugins
+    var eventManager = zest.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+
+    try zest.modules.PluginManager.init(allocator);
+    try zest.modules.PluginManager.add(&eventManager, "EventManager"); // Required by the Movement Script
+    defer zest.modules.PluginManager.deinit();
 
     // Create a drawable object
-    var rect = zigsdl.drawables.Rect.new(
+    var rect = zest.drawables.Rect.new(
         .{ .w = 20, .h = 20, .d = 1 },
         .{ .g = 255 },
     );
     var rect_drawable = rect.toDrawable();
 
-    var obj = zigsdl.modules.Object.init(allocator, .{
+    var obj = zest.modules.Object.init(allocator, .{
         .name = "GreenBox",
         .position = .{ .x = 20, .y = 20, .z = 1 },
         .rotation = .{ .x = 0, .y = 0, .z = 0 },
@@ -89,16 +94,16 @@ pub fn main(init: std.process.Init) !void {
     defer obj.deinit();
 
     // Add movement script to the object
-    var movement = zigsdl.scripts.Movement{ .velocity = 5, .smooth = true };
+    var movement = zest.scripts.Movement{ .velocity = 5, .smooth = true };
     try obj.addScript(@constCast(&movement.toScript()));
 
     // Create a scene and add the obj into it
-    var scene = zigsdl.modules.Scene.init(allocator);
+    var scene = zest.modules.Scene.init(allocator);
     defer scene.deinit();
     try scene.addObject(&obj);
 
     // Create a screen, attach the scene to it, and open it
-    var screen = try zigsdl.modules.Screen.init(.{
+    var screen = try zest.modules.Screen.init(.{
         .title = "Simple Game",
         .width = 320,
         .height = 320,
@@ -110,30 +115,30 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
-You may add as many objects as you want in the scene, you can easily add different functionalities and behaviour to your objects by adding scripts into them; you may use ZigSDL pre-defined drawables and/or scripts or write your own ones as follows:
+You may add as many objects as you want in the scene, you can easily add different functionalities and behaviour to your objects by adding scripts into them; you may use Zest pre-defined drawables and/or scripts or write your own ones as follows:
 
 The Rect Drawable:
 
 ```zig
-const zigsdl = @import("zigsdl");
+const zest = @import("zest");
 
 pub const Rect = struct {
-    dim: zigsdl.types.common.Dimensions,
-    color: zigsdl.types.common.Color = .{},
-    _draw_strategy: zigsdl.modules.DrawStrategy = zigsdl.modules.DrawStrategy{
+    dim: zest.types.common.Dimensions,
+    color: zest.types.common.Color = .{},
+    _draw_strategy: zest.modules.DrawStrategy = zest.modules.DrawStrategy{
         .draw = draw,
         .destroy = destroy,
     },
 
-    pub fn new(dim: zigsdl.types.common.Dimensions, color: zigsdl.types.common.Color) Rect {
+    pub fn new(dim: zest.types.common.Dimensions, color: zest.types.common.Color) Rect {
         return Rect{
             .dim = dim,
             .color = color,
         };
     }
 
-    pub fn toDrawable(self: *Rect) zigsdl.modules.Drawable {
-        return zigsdl.modules.Drawable{
+    pub fn toDrawable(self: *Rect) zest.modules.Drawable {
+        return zest.modules.Drawable{
             .dim = self.dim,
             .color = self.color,
             .drawStrategy = &self._draw_strategy,
@@ -141,12 +146,12 @@ pub const Rect = struct {
     }
 
     fn draw(
-        _: *zigsdl.modules.Drawable,
-        _: *const zigsdl.modules.DrawStrategy,
-        renderer: *zigsdl.sdl.SDL_Renderer,
-        p: zigsdl.types.common.Position,
-        _: zigsdl.types.common.Rotation,
-        dim: zigsdl.types.common.Dimensions,
+        _: *zest.modules.Drawable,
+        _: *const zest.modules.DrawStrategy,
+        renderer: *zest.sdl.SDL_Renderer,
+        p: zest.types.common.Position,
+        _: zest.types.common.Rotation,
+        dim: zest.types.common.Dimensions,
     ) !void {
         if (!sdl.c.SDL_RenderFillRect(renderer, &sdl.c.SDL_FRect{
             .x = p.x,
@@ -157,8 +162,8 @@ pub const Rect = struct {
     }
 
     fn destroy(
-        _: *zigsdl.modules.Drawable,
-        _: *const zigsdl.modules.DrawStrategy,
+        _: *zest.modules.Drawable,
+        _: *const zest.modules.DrawStrategy,
     ) void {}
 };
 ```
@@ -166,27 +171,27 @@ pub const Rect = struct {
 The Movement script:
 
 ```ZIG
-const zigsdl = @import("zigsdl");
+const zest = @import("zest");
 
 pub const Movement = struct {
     velocity: f32 = 5,
     smooth: bool = true,
 
-    _script_strategy: zigsdl.modules.ScriptStrategy = zigsdl.modules.ScriptStrategy{
+    _script_strategy: zest.modules.ScriptStrategy = zest.modules.ScriptStrategy{
         .start = start,
         .update = update,
         .end = end,
     },
 
-    _last_pressed: zigsdl.types.event.Key = .Unknown,
+    _last_pressed: zest.types.event.Key = .Unknown,
 
-    pub fn toScript(self: *Movement) zigsdl.modules.Script {
+    pub fn toScript(self: *Movement) zest.modules.Script {
         return modules.Script{ .strategy = &self._script_strategy };
     }
 
-    fn start(_: *zigsdl.modules.Script, _: *zigsdl.modules.Object) void {}
+    fn start(_: *zest.modules.Script, _: *zest.modules.Object) void {}
 
-    fn update(s: *zigsdl.modules.Script, o: *zigsdl.modules.Object) void {
+    fn update(s: *zest.modules.Script, o: *zest.modules.Object) void {
         const obj = o;
         const self = @as(*Movement, @constCast(@fieldParentPtr("_script_strategy", s.strategy)));
         var em = o.*._scene.?.screen.?.em;
@@ -202,20 +207,20 @@ pub const Movement = struct {
       // ...
     }
 
-    fn end(_: *zigsdl.modules.Script, _: *zigsdl.modules.Object) void {}
+    fn end(_: *zest.modules.Script, _: *zest.modules.Object) void {}
 };
 ```
 
-Moreover, you may access SDL indirectly from ZigSDL, and use SDL facilities in your scripts:
+Moreover, you may access SDL indirectly from Zest, and use SDL facilities in your scripts:
 
 ```zig
-const sdl = @import("zigsdl").sdl;
+const sdl = @import("zest").sdl;
 sdl.SDL_RenderFillRect(...);
 ```
 
 ## Install SDL3
 
-This guide provides brief instructions for installing SDL3 on various operating systems to support projects like `zigsdl`.
+This guide provides brief instructions for installing SDL3 on various operating systems.
 
 > Generated by Grok; with further, manual, modifications.
 
@@ -343,8 +348,8 @@ For detailed instructions or troubleshooting, visit the [SDL3 documentation](htt
 NOTE: the memo should be invalidated as well when child objects are added to scene objects.
 
 #### Scripts
-- [ ] Implement _Rigidbody_ script; it should, at minimum, specify the mass of the object, detect collisions, and apply gravity.
-- [ ] Implement _Collision_ script; any two objects with this script, and one of them is a rigid-body, they shall not overlap.
+- [x] Implement _Rigidbody_ script; it should, at minimum, specify the mass of the object, detect collisions, and apply gravity.
+- [x] Implement _Collision_ script; any two objects with this script, and one of them is a rigid-body, they shall not overlap.
 - [ ] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
 commence to play an audio, it searches for an AudioListener in the same scene. Once it find one, it plays \
 the audio with the volumes of its channels twisted according to the distance between the two objects (one \

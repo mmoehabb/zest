@@ -1,26 +1,26 @@
-const zigsdl = @import("zigsdl");
+const zest = @import("zest");
 const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     // Define and add plugins
-    var collisionDetector = zigsdl.plugins.CollisionDetector.init(allocator, init.io);
+    var collisionDetector = zest.plugins.CollisionDetector.init(allocator, init.io);
     try collisionDetector.start();
     defer collisionDetector.deinit();
 
-    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
 
     // Initialize the plugin manager
-    const pm = zigsdl.modules.PluginManager;
+    const pm = zest.modules.PluginManager;
     try pm.init(allocator);
     try pm.add(&collisionDetector, "CollisionDetector");
     try pm.add(&eventManager, "EventManager");
     defer pm.deinit();
 
     // Create boxes and terrain objects
-    var rect = zigsdl.drawables.Rect.new(
+    var rect = zest.drawables.Rect.new(
         .{ .w = 20, .h = 20, .d = 1 },
         .{ .r = 255 },
     );
@@ -46,19 +46,19 @@ pub fn main(init: std.process.Init) !void {
     }
     defer for (&boxes) |*box| if (box.*) |b| b.deinit();
 
-    var terrain_rect = zigsdl.drawables.Rect.new(
+    var terrain_rect = zest.drawables.Rect.new(
         .{ .w = 320, .h = 50, .d = 1 },
         .{ .g = 255 },
     );
     var terrain_drawable = terrain_rect.toDrawable();
-    var terrain = zigsdl.modules.Object.init(allocator, .{
+    var terrain = zest.modules.Object.init(allocator, .{
         .name = "Terrain",
         .position = .{ .x = 0, .y = 270 },
         .rotation = .{ .x = 0, .y = 0 },
         .drawable = &terrain_drawable,
     });
 
-    var terrain_faces = [_]zigsdl.types.Face{
+    var terrain_faces = [_]zest.types.Face{
         .{
             .p1 = .{ .x = 0, .y = 0 },
             .p2 = .{ .x = 320, .y = 0 },
@@ -67,10 +67,10 @@ pub fn main(init: std.process.Init) !void {
             .owner = &terrain,
         },
     };
-    var terrain_mesh = try zigsdl.scripts.Mesh.init(allocator, &terrain_faces);
+    var terrain_mesh = try zest.scripts.Mesh.init(allocator, &terrain_faces);
     defer terrain_mesh.deinit();
 
-    var terrain_rigidbody = try zigsdl.scripts.Rigidbody.init(.{
+    var terrain_rigidbody = try zest.scripts.Rigidbody.init(.{
         .allocator = allocator,
         .mass = 500,
         .static = true,
@@ -82,7 +82,7 @@ pub fn main(init: std.process.Init) !void {
     defer terrain.deinit();
 
     // Create a scene and add the obj into it
-    var scene = zigsdl.modules.Scene.init(allocator);
+    var scene = zest.modules.Scene.init(allocator);
     defer scene.deinit();
     for (boxes) |box| {
         try scene.addObject(box.?.toObject());
@@ -90,7 +90,7 @@ pub fn main(init: std.process.Init) !void {
     try scene.addObject(&terrain);
 
     // Create a screen, attach the scene to it, and open it
-    var screen = try zigsdl.modules.Screen.init(.{
+    var screen = try zest.modules.Screen.init(.{
         .title = "Simple Game",
         .width = 320,
         .height = 320,
@@ -102,28 +102,28 @@ pub fn main(init: std.process.Init) !void {
 }
 
 const Box = struct {
-    _obj: zigsdl.modules.Object,
-    _mesh: *zigsdl.scripts.Mesh,
-    _rigidbody: *zigsdl.scripts.Rigidbody,
+    _obj: zest.modules.Object,
+    _mesh: *zest.scripts.Mesh,
+    _rigidbody: *zest.scripts.Rigidbody,
     _allocator: std.mem.Allocator,
 
     pub fn init(
         allocator: std.mem.Allocator,
-        drawable: *zigsdl.modules.Drawable,
+        drawable: *zest.modules.Drawable,
         name: []const u8,
-        p: zigsdl.types.Vector,
+        p: zest.types.Vector,
     ) !*Box {
         var box = try allocator.create(Box);
         box._allocator = allocator;
 
-        box._obj = zigsdl.modules.Object.init(allocator, .{
+        box._obj = zest.modules.Object.init(allocator, .{
             .name = name,
             .position = p,
             .rotation = .{ .x = 0, .y = 0 },
             .drawable = drawable,
         });
 
-        var box_faces = [_]zigsdl.types.Face{
+        var box_faces = [_]zest.types.Face{
             .{
                 .p1 = .{ .x = 0, .y = 0 },
                 .p2 = .{ .x = 20, .y = 0 },
@@ -132,11 +132,11 @@ const Box = struct {
                 .owner = &box._obj,
             },
         };
-        var box_mesh = try zigsdl.scripts.Mesh.init(allocator, &box_faces);
+        var box_mesh = try zest.scripts.Mesh.init(allocator, &box_faces);
         try box._obj.addScript(box_mesh.toScript());
         box._mesh = box_mesh;
 
-        var box_rigidbody = try zigsdl.scripts.Rigidbody.init(.{
+        var box_rigidbody = try zest.scripts.Rigidbody.init(.{
             .allocator = allocator,
             .mass = 5,
             .gravity = true,
@@ -155,7 +155,7 @@ const Box = struct {
         self._allocator.destroy(self);
     }
 
-    pub fn toObject(self: *Box) *zigsdl.modules.Object {
+    pub fn toObject(self: *Box) *zest.modules.Object {
         return &self._obj;
     }
 };

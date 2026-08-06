@@ -1,6 +1,6 @@
 const std = @import("std");
-const zigsdl = @import("zigsdl");
-const GUI = zigsdl.drawables.GUI;
+const zest = @import("zest");
+const GUI = zest.drawables.GUI;
 
 const font_path = "./examples/assets/OpenSans-Regular.ttf";
 const font_size: f32 = 18;
@@ -37,11 +37,11 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     // Define and add plugins
-    var eventManager = zigsdl.plugins.EventManager.init(allocator);
+    var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
-    try zigsdl.modules.PluginManager.init(allocator);
-    try zigsdl.modules.PluginManager.add(&eventManager, "EventManager");
-    defer zigsdl.modules.PluginManager.deinit();
+    try zest.modules.PluginManager.init(allocator);
+    try zest.modules.PluginManager.add(&eventManager, "EventManager");
+    defer zest.modules.PluginManager.deinit();
 
     var button = try GUI.Button.new(.{
         .label = "Click me",
@@ -88,14 +88,14 @@ pub fn main(init: std.process.Init) !void {
     g_status = &status;
     var status_drawable = status.toDrawable();
 
-    var button_obj = zigsdl.modules.Object.init(allocator, .{
+    var button_obj = zest.modules.Object.init(allocator, .{
         .name = "button",
         .position = .{ .x = 30, .y = 30, .z = 1 },
         .drawable = &button_drawable,
     });
     defer button_obj.deinit();
 
-    var checkbox_obj = zigsdl.modules.Object.init(allocator, .{
+    var checkbox_obj = zest.modules.Object.init(allocator, .{
         .name = "checkbox",
         .position = .{ .x = 30, .y = 90, .z = 1 },
         .drawable = &checkbox_drawable,
@@ -108,7 +108,7 @@ pub fn main(init: std.process.Init) !void {
         .font_size = font_size,
     });
     var checkbox_label_drawable = checkbox_label.toDrawable();
-    var checkbox_label_obj = zigsdl.modules.Object.init(allocator, .{
+    var checkbox_label_obj = zest.modules.Object.init(allocator, .{
         .name = "checkbox_label",
         .position = .{ .x = 36, .y = 0, .z = 1 },
         .drawable = &checkbox_label_drawable,
@@ -116,28 +116,28 @@ pub fn main(init: std.process.Init) !void {
     defer checkbox_label_obj.deinit();
     try checkbox_obj.addChild(&checkbox_label_obj);
 
-    var text_input_obj = zigsdl.modules.Object.init(allocator, .{
+    var text_input_obj = zest.modules.Object.init(allocator, .{
         .name = "text_input",
         .position = .{ .x = 30, .y = 150, .z = 1 },
         .drawable = &text_input_drawable,
     });
     defer text_input_obj.deinit();
 
-    var select_obj = zigsdl.modules.Object.init(allocator, .{
+    var select_obj = zest.modules.Object.init(allocator, .{
         .name = "select",
         .position = .{ .x = 30, .y = 210, .z = 1 },
         .drawable = &select_drawable,
     });
     defer select_obj.deinit();
 
-    var status_obj = zigsdl.modules.Object.init(allocator, .{
+    var status_obj = zest.modules.Object.init(allocator, .{
         .name = "status",
         .position = .{ .x = 30, .y = 280, .z = 1 },
         .drawable = &status_drawable,
     });
     defer status_obj.deinit();
 
-    var scene = zigsdl.modules.Scene.init(allocator);
+    var scene = zest.modules.Scene.init(allocator);
     defer scene.deinit();
     try scene.addObject(&button_obj);
     try scene.addObject(&checkbox_obj);
@@ -145,7 +145,7 @@ pub fn main(init: std.process.Init) !void {
     try scene.addObject(&select_obj);
     try scene.addObject(&status_obj);
 
-    var screen = try zigsdl.modules.Screen.init(.{
+    var screen = try zest.modules.Screen.init(.{
         .title = "UI Demo",
         .width = 400,
         .height = 360,

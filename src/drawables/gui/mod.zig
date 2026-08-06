@@ -1,4 +1,4 @@
-//! zigsdl predefined GUI drawables.
+//! zest predefined GUI drawables.
 
 pub const Text = @import("text.zig");
 pub const Button = @import("button.zig");

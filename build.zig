@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
     sdl_c.linkSystemLibrary("SDL3_image", .{ .needed = true });
     sdl_c.link_libc = true;
 
-    const zigsdl = b.addModule("zigsdl", .{
+    const zest = b.addModule("zest", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm1.root_module.addImport("zigsdl", zigsdl);
+    exm1.root_module.addImport("zest", zest);
     b.installArtifact(exm1);
 
     const exm1_run_cmd = b.addRunArtifact(exm1);
@@ -53,7 +53,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm2.root_module.addImport("zigsdl", zigsdl);
+    exm2.root_module.addImport("zest", zest);
     b.installArtifact(exm2);
 
     const exm2_run_cmd = b.addRunArtifact(exm2);
@@ -68,7 +68,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm3.root_module.addImport("zigsdl", zigsdl);
+    exm3.root_module.addImport("zest", zest);
     b.installArtifact(exm3);
 
     const exm3_run_cmd = b.addRunArtifact(exm3);
@@ -83,7 +83,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm4.root_module.addImport("zigsdl", zigsdl);
+    exm4.root_module.addImport("zest", zest);
     b.installArtifact(exm4);
 
     const exm4_run_cmd = b.addRunArtifact(exm4);
@@ -98,7 +98,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm5.root_module.addImport("zigsdl", zigsdl);
+    exm5.root_module.addImport("zest", zest);
     b.installArtifact(exm5);
 
     const exm5_run_cmd = b.addRunArtifact(exm5);
@@ -113,7 +113,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm6.root_module.addImport("zigsdl", zigsdl);
+    exm6.root_module.addImport("zest", zest);
     b.installArtifact(exm6);
 
     const exm6_run_cmd = b.addRunArtifact(exm6);
@@ -128,7 +128,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm7.root_module.addImport("zigsdl", zigsdl);
+    exm7.root_module.addImport("zest", zest);
     b.installArtifact(exm7);
 
     const exm7_run_cmd = b.addRunArtifact(exm7);
@@ -143,7 +143,7 @@ pub fn build(b: *std.Build) void {
             .optimize = .Debug,
         }),
     });
-    exm8.root_module.addImport("zigsdl", zigsdl);
+    exm8.root_module.addImport("zest", zest);
     b.installArtifact(exm8);
 
     const exm8_run_cmd = b.addRunArtifact(exm8);
@@ -154,7 +154,7 @@ pub fn build(b: *std.Build) void {
     // ********** Add test step **********
     // ***********************************
     const exe_unit_tests = b.addTest(.{
-        .root_module = zigsdl,
+        .root_module = zest,
     });
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const test_step = b.step("test", "Run unit tests");
