@@ -75,11 +75,16 @@ pub fn rmvObject(self: *CollisionDetector, obj: *Object) void {
 
 /// Get a slice of objects that collides with the passed _obj_ parameter, and append
 /// them into the passed _arr_.
-pub fn getCollisions(self: *CollisionDetector, obj: *Object, arr: *std.ArrayList(Collision)) !void {
+pub fn getCollisions(
+    self: *CollisionDetector,
+    obj: *Object,
+    allocator: std.mem.Allocator,
+    arr: *std.ArrayList(Collision),
+) !void {
     try self._state_mutex.lock(self._io);
     defer self._state_mutex.unlock(self._io);
     const res = try self._collision_map.getOrPutValue(obj, .empty);
-    try arr.appendSlice(self._allocator, res.value_ptr.items);
+    try arr.appendSlice(allocator, res.value_ptr.items);
 }
 
 fn detectCollisionThread(self: *CollisionDetector) void {
@@ -88,15 +93,18 @@ fn detectCollisionThread(self: *CollisionDetector) void {
     if (!self._deinitializing) return self.detectCollisionThread();
 }
 
-// TODO: enhance this by invoking it only upon requests; if there is no
-// components calling getCollisions, then no need for these computations.
 fn detectCollisionAsync(self: *CollisionDetector) void {
     if (self._deinitializing) return;
     self._io.sleep(.fromMilliseconds(16), .awake) catch {
         std.log.err("phyzx-engine: Io Sleep Failed!", .{});
         return;
     };
+    self.detectCollision();
+}
 
+/// Call this function whenever you want to make sure the state of the
+/// collision detector is up-to-date.
+pub fn detectCollision(self: *CollisionDetector) void {
     self._state_mutex.lock(self._io) catch unreachable;
     defer self._state_mutex.unlock(self._io);
 

@@ -29,6 +29,11 @@ pub fn init(data: struct {
     gravity: bool = false,
     static: bool = false,
 }) !*Rigidbody {
+    // Ensure required plugins are available
+    const cd = modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector");
+    if (cd == null) return error.CollisionDetectorRequired;
+
+    // Initialize the script
     var rigidbody = try data.allocator.create(Rigidbody);
     rigidbody.mass = data.mass;
     rigidbody.gravity = data.gravity;
@@ -39,7 +44,7 @@ pub fn init(data: struct {
         .update = update,
         .end = end,
     };
-    rigidbody._collisionDetector = null;
+    rigidbody._collisionDetector = cd;
     rigidbody._collisions = .empty;
     rigidbody._vel = .{};
     rigidbody._acc = .{};
@@ -59,14 +64,20 @@ pub fn toScript(self: *Rigidbody) modules.Script {
     };
 }
 
-fn start(s: *modules.Script, _: *modules.Object) void {
+fn start(s: *modules.Script, obj: *modules.Object) void {
     const self = @as(*Rigidbody, @constCast(
         @fieldParentPtr("_script_strategy", s.strategy),
     ));
-    self._collisionDetector = modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector");
     if (self.static) {
         self._pfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
         self._nfr = .{ .x = 1.00, .y = 1.00, .z = 1.00 };
+    } else {
+        if (modules.PluginManager.get(plugins.JammingResolver, "JammingResolver")) |jr| {
+            jr.addObject(obj) catch std.log.warn(
+                "Rigidbody.start: couldn't add the object into the JammingResolver!",
+                .{},
+            );
+        }
     }
 }
 
@@ -96,7 +107,7 @@ fn update(s: *modules.Script, obj: *modules.Object) void {
 
     // Detect collision, reslove jamming, and calculate frictions
     self._collisions.clearRetainingCapacity();
-    self._collisionDetector.?.getCollisions(obj, &self._collisions) catch unreachable;
+    self._collisionDetector.?.getCollisions(obj, self._allocator, &self._collisions) catch unreachable;
 
     for (self._collisions.items) |collision| {
         const cobj = collision.face.owner;
@@ -116,7 +127,11 @@ fn update(s: *modules.Script, obj: *modules.Object) void {
     }
 }
 
-fn end(_: *modules.Script, _: *modules.Object) void {}
+fn end(_: *modules.Script, obj: *modules.Object) void {
+    if (modules.PluginManager.get(plugins.JammingResolver, "JammingResolver")) |jr| {
+        jr.rmvObject(obj);
+    }
+}
 
 /// Apply force to the object and get a reaction force.
 /// NOTE: this mutates the inner state.

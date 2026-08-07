@@ -109,7 +109,10 @@ fn update(self: *Screen) !void {
     }
 
     _ = sdl.SDL_RenderClear(self._renderer);
-    if (self._scene) |s| try s.update(self._renderer.?);
+    if (self._scene) |s| {
+        try s.update();
+        try s.draw(self._renderer.?);
+    }
     // TODO: get the background color from user input
     _ = sdl.SDL_SetRenderDrawColor(self._renderer, 0, 0, 0, 255);
     _ = sdl.SDL_RenderPresent(self._renderer);

@@ -54,10 +54,15 @@ pub fn start(self: *Scene) !void {
 }
 
 /// This ought to be invoked by the [screen](#root.modules.screen).
-pub fn update(self: *Scene, renderer: *sdl.SDL_Renderer) !void {
+pub fn update(self: *Scene) !void {
     if (self.lifecycle.preUpdate) |func| func(self);
-    for (self._objects.items) |obj| try obj.update(renderer);
+    for (self._objects.items) |obj| try obj.update();
     if (self.lifecycle.postUpdate) |func| func(self);
+}
+
+/// This ought to be invoked by the [screen](#root.modules.screen).
+pub fn draw(self: *Scene, renderer: *sdl.SDL_Renderer) !void {
+    for (self._objects.items) |obj| try obj.draw(renderer);
 }
 
 pub fn setScreen(self: *Scene, screen: *Screen) void {

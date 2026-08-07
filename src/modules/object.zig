@@ -91,28 +91,34 @@ pub fn start(self: *Object) !void {
 }
 
 /// This method shall only be invoked via the scene.
-pub fn update(self: *Object, renderer: *sdl.SDL_Renderer) !void {
+pub fn update(self: *Object) !void {
     if (!self._active) return;
     if (self.lifecycle.preUpdate) |func| func(self);
     for (self._scripts.items) |*script| script.update(self);
-
-    self.drawable.?.dim.sf = if (self._parent) |p| blk: {
-        break :blk p.drawable.?.dim.scale * p.drawable.?.dim.sf;
-    } else self._scene.?.scale;
-
-    const abs_scale = if (self.drawable) |d| d.dim.getAbsScale() else 1.0;
-
-    const pos = if (self._parent) |p| blk: {
-        break :blk self.position.add(p.position).multiply(abs_scale);
-    } else self.position.add(self._scene.?.origin).multiply(abs_scale);
-
-    const rot = if (self._parent) |p| blk: {
-        break :blk self.rotation.add(p.rotation);
-    } else self.rotation;
-
-    if (self.drawable) |d| try d.draw(renderer, pos, rot);
-    for (self._children.items) |child| try child.update(renderer);
+    for (self._children.items) |child| try child.update();
     if (self.lifecycle.postUpdate) |func| func(self);
+}
+
+/// This method shall only be invoked via the scene.
+pub fn draw(self: *Object, renderer: *sdl.SDL_Renderer) !void {
+    if (self.drawable) |drawable| {
+        drawable.dim.sf = if (self._parent) |parent| blk: {
+            break :blk parent.drawable.?.dim.scale * parent.drawable.?.dim.sf;
+        } else self._scene.?.scale;
+
+        const abs_scale = drawable.dim.getAbsScale();
+
+        const pos = if (self._parent) |p| blk: {
+            break :blk self.position.add(p.position).multiply(abs_scale);
+        } else self.position.add(self._scene.?.origin).multiply(abs_scale);
+
+        const rot = if (self._parent) |p| blk: {
+            break :blk self.rotation.add(p.rotation);
+        } else self.rotation;
+
+        try drawable.draw(renderer, pos, rot);
+    }
+    for (self._children.items) |child| try child.draw(renderer);
 }
 
 /// Note: Only activated objects are rendered in the scene, and their scripts are invoked.

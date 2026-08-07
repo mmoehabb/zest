@@ -19,7 +19,8 @@ pub fn main(init: std.process.Init) !void {
     defer eventManager.deinit();
     try pm.add(&eventManager, "EventManager");
 
-    var jammingResolver = try zest.plugins.JammingResolver.init();
+    var jammingResolver = try zest.plugins.JammingResolver.init(allocator);
+    defer jammingResolver.deinit();
     try pm.add(&jammingResolver, "JammingResolver");
     // <<<
 
