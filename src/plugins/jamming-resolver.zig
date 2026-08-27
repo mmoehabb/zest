@@ -80,7 +80,7 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
 
     for (self._objects.items) |obj1| {
         self._collisions.clearRetainingCapacity();
-        dc.getCollisions(obj1, self._allocator, &self._collisions) catch {
+        dc.getCollisions(self._allocator, obj1, &self._collisions) catch {
             std.log.err("JammingResolver.resolve: collisions couldn't be detected!", .{});
             return;
         };
@@ -88,7 +88,7 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
         // - Get the negative momentum which shall be used in order to get the
         //   original positions of the object face points.
         const rigid1 = obj1.getScript(Rigidbody, "Rigidbody").?;
-        const nmom = rigid1._vel.multiply(-1);
+        const nmom = rigid1.velocity.multiply(-1);
         const pos1 = obj1.position.add(nmom);
 
         // - Get the minimal magnitude to move pos1 so that it barely touches `collision.face`.
@@ -123,7 +123,7 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
 
                     // Get the point c which is the insection of point p with the
                     // line `ab` while moving in the direction `-nmom`.
-                    const c = getPointLineTrajectory(p, a.?, b.?, rigid1._vel);
+                    const c = getPointLineTrajectory(p, a.?, b.?, rigid1.velocity);
                     if (c == null) continue;
 
                     const mag = c.?.subtract(p).magnitude();
@@ -133,38 +133,12 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
         }
 
         if (min_mag) |n| {
-            obj1.position = pos1.add(rigid1._vel.norm().multiply(n));
+            obj1.position = pos1.add(rigid1.velocity.normalize().multiply(n));
         }
     }
-
-    // Ensure there are no remaining collisions
-    // dc.detectCollision();
-    // if (self.jammingExist(0.5)) return self.resolve(false);
 }
 
-fn jammingExist(self: *JammingResolver, threshold: f32) bool {
-    for (self._objects.items) |obj| {
-        self._collisions.clearRetainingCapacity();
-        self._collisionDetector.getCollisions(obj, self._allocator, &self._collisions) catch {
-            std.log.err("JammingResolver.resolve: collisions couldn't be detected!", .{});
-            return false;
-        };
-        for (self._collisions.items) |c| {
-            inline for (c.cps) |cp| {
-                if (cp) |cpoint| {
-                    const cx = @abs(cpoint.mag.x);
-                    const cy = @abs(cpoint.mag.y);
-                    const mc = @min(cx, cy); // TODO: include c.z
-                    if (mc > threshold) return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-/// Get the point on line `ab` which is the trajectory of
-/// point p, on line `ab`, moving in direction `r`.
+/// Get the point, on line `ab`, which is the trajectory of point p moving in direction `r`.
 /// TODO: add the z dimention, into account, in this algorithm.
 fn getPointLineTrajectory(
     pp: Vector, // point p
