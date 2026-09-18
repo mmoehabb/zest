@@ -33,8 +33,8 @@ pub const DrawStrategy = struct {
         _: *Drawable,
         _: *const DrawStrategy,
         _: *sdl.SDL_Renderer,
-        _: types.Vector,
-        _: types.Vector,
+        _: types.Point,
+        _: types.Point,
         _: types.Dimensions,
     ) error{ RenderFailed, InvalidInputs }!void,
 
@@ -70,8 +70,8 @@ pub const Drawable = struct {
     pub fn draw(
         self: *Drawable,
         renderer: *sdl.SDL_Renderer,
-        pos: types.Vector,
-        rot: types.Vector,
+        pos: types.Point,
+        rot: types.Point,
     ) !void {
         if (self.color) |color| _ = sdl.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         try self.drawStrategy.draw(self, self.drawStrategy, renderer, pos, rot, self.dim.getScaled());

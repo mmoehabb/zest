@@ -4,20 +4,25 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
-    // Define and add plugins
-    var collisionDetector = zest.plugins.CollisionDetector.init(allocator, init.io);
-    try collisionDetector.start();
-    defer collisionDetector.deinit();
-
-    var eventManager = zest.plugins.EventManager.init(allocator);
-    defer eventManager.deinit();
-
     // Initialize the plugin manager
     const pm = zest.modules.PluginManager;
     try pm.init(allocator);
-    try pm.add(&collisionDetector, "CollisionDetector");
-    try pm.add(&eventManager, "EventManager");
     defer pm.deinit();
+
+    // >>> Define and add plugins
+    var collisionDetector = zest.plugins.CollisionDetector.init(allocator, init.io);
+    try collisionDetector.start(false);
+    defer collisionDetector.deinit();
+    try pm.add(&collisionDetector, "CollisionDetector");
+
+    var eventManager = zest.plugins.EventManager.init(allocator);
+    defer eventManager.deinit();
+    try pm.add(&eventManager, "EventManager");
+
+    var jammingResolver = try zest.plugins.JammingResolver.init(allocator);
+    defer jammingResolver.deinit();
+    try pm.add(&jammingResolver, "JammingResolver");
+    // <<<
 
     // Create boxes and terrain objects
     var rect = zest.drawables.Rect.new(
@@ -26,8 +31,7 @@ pub fn main(init: std.process.Init) !void {
     );
     var box_drawable = rect.toDrawable();
 
-    var boxes: [5]?*Box = @splat(null);
-
+    var boxes: [10]?*Box = @splat(null);
     const rng_impl: std.Random.IoSource = .{ .io = init.io };
     const rng = rng_impl.interface();
 
@@ -44,6 +48,7 @@ pub fn main(init: std.process.Init) !void {
             },
         );
     }
+
     defer for (&boxes) |*box| if (box.*) |b| b.deinit();
 
     var terrain_rect = zest.drawables.Rect.new(
@@ -84,6 +89,15 @@ pub fn main(init: std.process.Init) !void {
     // Create a scene and add the obj into it
     var scene = zest.modules.Scene.init(allocator);
     defer scene.deinit();
+
+    scene.lifecycle.postUpdate = struct {
+        var jr: ?*zest.plugins.JammingResolver = null;
+        fn func(_: *anyopaque) void {
+            jr = jr orelse zest.modules.PluginManager.get(zest.plugins.JammingResolver, "JammingResolver").?;
+            jr.?.resolve(true);
+        }
+    }.func;
+
     for (boxes) |box| {
         try scene.addObject(box.?.toObject());
     }
@@ -139,7 +153,7 @@ const Box = struct {
         var box_rigidbody = try zest.scripts.Rigidbody.init(.{
             .allocator = allocator,
             .mass = 5,
-            .gravity = true,
+            .gravity = 1.00,
             .static = false,
         });
         try box._obj.addScript(box_rigidbody.toScript());
