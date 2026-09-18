@@ -94,9 +94,10 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
         // - Get the minimal magnitude to move pos1 so that it barely touches `collision.face`.
         var min_mag: ?f32 = null;
         for (self._collisions.items) |col| {
-            for (col.cps) |cp| {
-                if (cp) |cpoint| {
-                    const p = cpoint.point.add(nmom);
+            for (col.points) |point| {
+                if (point) |cpoint| {
+                    const org_p = (Vector{}).fromPoint(cpoint);
+                    const p = org_p.add(nmom);
                     // Get the line, `ab`, of the collision between `p` and `collision.face`.
                     var a: ?Vector = null;
                     var b: ?Vector = null;
@@ -104,7 +105,7 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
                     var ang2: f32 = 360;
                     for ([4]Vector{ col.face.p1, col.face.p2, col.face.p3, col.face.p4 }) |fp| {
                         const abs_fp = fp.add(col.face.owner.position);
-                        const ang = abs_fp.subtract(cpoint.point).evalAngleWith(nmom);
+                        const ang = abs_fp.subtract(org_p).evalAngleWith(nmom);
                         if (ang < ang1) {
                             ang2 = ang1;
                             b = a;

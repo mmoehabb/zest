@@ -116,7 +116,7 @@ pub fn draw(self: *Object, renderer: *sdl.SDL_Renderer) !void {
             break :blk self.rotation.add(p.rotation);
         } else self.rotation;
 
-        try drawable.draw(renderer, pos, rot);
+        try drawable.draw(renderer, pos.toPoint(), rot.toPoint());
     }
     for (self._children.items) |child| try child.draw(renderer);
 }

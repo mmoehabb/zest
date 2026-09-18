@@ -164,14 +164,7 @@ pub fn detectCollision(self: *CollisionDetector) void {
                 if (altCircum > origCircum) continue;
 
                 // Update the state with the detected collision
-                collision.addPoint(.{
-                    .point = p,
-                    .mag = .{
-                        .x = closestVertex.x - p.x,
-                        .y = closestVertex.y - p.y,
-                        .z = closestVertex.z - p.z,
-                    },
-                });
+                collision.addPoint(p.toPoint());
             }
 
             if (collision._len > 0) {

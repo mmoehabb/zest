@@ -151,8 +151,8 @@ fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Vector,
-    _: types.Vector,
+    pos: types.Point,
+    _: types.Point,
     dim: types.Dimensions,
 ) !void {
     const self = @as(*Select, @constCast(@fieldParentPtr("_draw_strategy", ds)));

@@ -71,8 +71,8 @@ fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Vector,
-    rot: types.Vector,
+    pos: types.Point,
+    rot: types.Point,
     dim: types.Dimensions,
 ) !void {
     const self = @as(*Sprite, @constCast(@fieldParentPtr("_draw_strategy", ds)));

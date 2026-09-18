@@ -1,6 +1,7 @@
 // TODO: improve the performance of these methods by using zig vectors (SIMD).
 
 const std = @import("std");
+const Point = @import("./point.zig");
 const Vector = @This();
 
 x: f32 = 0,
@@ -94,4 +95,12 @@ pub fn normalize(self: Vector) Vector {
 
 pub fn lerp(self: Vector, v: Vector, t: f32) Vector {
     return self.add(v.subtract(self).multiply(t));
+}
+
+pub fn fromPoint(_: Vector, p: Point) Vector {
+    return .{ .x = p.x, .y = p.y, .z = p.z };
+}
+
+pub fn toPoint(self: Vector) Point {
+    return .{ .x = self.x, .y = self.y, .z = self.z };
 }

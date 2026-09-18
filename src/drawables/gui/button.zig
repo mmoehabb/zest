@@ -67,7 +67,7 @@ pub fn setLabel(self: *Button, label: []const u8) void {
     self._texture = null;
 }
 
-fn fillRect(renderer: *sdl.SDL_Renderer, pos: types.Vector, dim: types.Dimensions, color: types.Color) !void {
+fn fillRect(renderer: *sdl.SDL_Renderer, pos: types.Point, dim: types.Dimensions, color: types.Color) !void {
     const fc: sdl.SDL_FColor = .{
         .r = @floatFromInt(color.r),
         .g = @floatFromInt(color.g),
@@ -110,8 +110,8 @@ fn draw(
     _: *modules.Drawable,
     ds: *const modules.DrawStrategy,
     renderer: *sdl.SDL_Renderer,
-    pos: types.Vector,
-    _: types.Vector,
+    pos: types.Point,
+    _: types.Point,
     dim: types.Dimensions,
 ) !void {
     const self = @as(*Button, @constCast(@fieldParentPtr("_draw_strategy", ds)));
