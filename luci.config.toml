@@ -5,6 +5,7 @@ description = "A fast simple way to explore and execute available zig build comm
 format = "zig fmt ."
 test = "zig build test --summary all --verbose"
 build = "zig build"
+generate-docs = "zig build-lib -femit-docs ./src/root.zig"
 run-examples = """
 zig build example:hello-world &&
 zig build example:moving-box &&
