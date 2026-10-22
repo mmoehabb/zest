@@ -24,11 +24,10 @@ pub fn main(init: std.process.Init) !void {
     });
     var idle_drawable = idle.toDrawable(.{ .w = 120, .h = 150, .d = 1 }, .{});
 
-    var audioPlayer = try zest.scripts.AudioPlayer.init(
-        allocator,
-        "./examples/assets/explosion.wav",
-        false,
-    );
+    var audioPlayer = try zest.scripts.AudioPlayer.init(allocator, .{
+        .path = "./examples/assets/explosion.wav",
+        .loop = false,
+    });
     defer audioPlayer.deinit();
 
     var obj = zest.modules.Object.init(allocator, .{

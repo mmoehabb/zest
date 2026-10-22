@@ -232,6 +232,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   vcpkg install sdl3
   vcpkg install sdl3_ttf
   vcpkg install sdl3_image
+  vcpkg install sdl3_mixer
   ```
 
 - **Manual Installation**:
@@ -248,6 +249,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   brew install sdl3
   brew install sdl3_ttf
   brew install sdl3_image
+  brew install sdl3_mixer
   ```
 
 - **Manual Installation**:
@@ -265,16 +267,17 @@ This guide provides brief instructions for installing SDL3 on various operating 
   sudo apt-get install libsdl3-dev
   sudo apt-get install libsdl3_ttf-dev
   sudo apt-get install libsdl3_image-dev
+  sudo apt-get install libsdl3_mixer-dev
   ```
 
 - **Manual Installation**:
 
   1. Install SDL3
     ```bash
-    wget https://github.com/libsdl-org/SDL/releases/download/release-3.2.26/SDL3-3.2.26.tar.gz
-    tar -xf SDL3-3.2.26.tar.gz
-    mkdir ./SDL3-3.2.26/build
-    cd ./SDL3-3.2.26/build
+    wget https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+    tar -xf SDL3-3.4.18.tar.gz
+    mkdir ./SDL3-3.4.18/build
+    cd ./SDL3-3.4.18/build
     cmake ..
     cmake --build . --parallel $(nproc)
     sudo cmake --install .
@@ -302,6 +305,17 @@ This guide provides brief instructions for installing SDL3 on various operating 
     sudo cmake --install .
   ```
 
+  3. Install SDL3_mixer
+    ```bash
+	wget https://github.com/libsdl-org/SDL_mixer/releases/download/release-3.2.4/SDL3_mixer-3.2.4.tar.gz
+    tar -xf SDL3_mixer-3.2.4.tar.gz
+    mkdir ./SDL3_mixer-3.2.4/build
+    cd ./SDL3_mixer-3.2.4/build
+    cmake ..
+    cmake --build . --parallel $(nproc)
+    sudo cmake --install .
+  ```
+
 ### Linux (Fedora)
 
 - **Using dnf**:
@@ -310,6 +324,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   sudo dnf install SDL3-devel
   sudo dnf install SDL3_ttf-devel
   sudo dnf install SDL3_image-devel
+  # SDL3_mixer is not avaiable in fedora packages repo; you must install it manually
   ```
 
 ### Linux (Arch)
@@ -320,6 +335,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   paru -S sdl3
   paru -S sdl3_ttf
   paru -S sdl3_image
+  paru -S sdl3_mixer
   ```
 
 ### Verifying Installation

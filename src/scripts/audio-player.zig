@@ -11,6 +11,8 @@ const AudioPlayer = @This();
 
 wav_path: []const u8,
 
+autoplay: bool = false,
+
 /// Set it to true before invoking _play_, in order to play the audio_buf recursively.
 loop: bool = false,
 
@@ -42,14 +44,17 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
     .end = end,
 },
 
-_end_invoked: bool = false,
-
 _allocator: std.mem.Allocator,
 
-pub fn init(allocator: std.mem.Allocator, path: []const u8, loop: bool) !*AudioPlayer {
+pub fn init(allocator: std.mem.Allocator, config: struct {
+    path: []const u8 = "",
+    loop: bool = false,
+    autoplay: bool = false,
+}) !*AudioPlayer {
     var audioPlayer = try allocator.create(AudioPlayer);
-    audioPlayer.wav_path = path;
-    audioPlayer.loop = loop;
+    audioPlayer.wav_path = config.path;
+    audioPlayer.loop = config.loop;
+    audioPlayer.autoplay = config.autoplay;
     audioPlayer._volume = 1.0;
     audioPlayer._audio_spec = .{};
     audioPlayer._script_strategy = .{
@@ -80,7 +85,7 @@ pub fn loadWAV(self: *AudioPlayer, path: []const u8) void {
         &self._audio_buf,
         &self._audio_buf_len,
     )) {
-        std.log.err("{s}\n", .{sdl.SDL_GetError()});
+        std.log.err("[SCRIPT] AudioPlayer: {s}\n", .{sdl.SDL_GetError()});
         return;
     }
     self._audio_dur = self.getAudioDur();
@@ -93,6 +98,12 @@ pub fn play(self: *AudioPlayer) !modules.AudioStream {
     ).?.newStream(&self._audio_spec);
     audio_stream.@"resume"(); // NOTE: streams are paused by default
     audio_stream.putAudio(self._audio_buf, self._audio_buf_len);
+
+    if (self.loop) {
+        // TODO: implement Timer pluggin then use it to schedule calling this function
+        audio_stream.putAudio(self._audio_buf, self._audio_buf_len);
+    }
+
     return audio_stream;
 }
 
@@ -104,7 +115,7 @@ pub fn setVolume(self: *AudioPlayer, volume: f32) void {
         self._audio_spec.format,
         self._audio_buf_len,
         volume - self._volume,
-    )) std.log.warn("AudioPlayer: {s}\n", .{sdl.SDL_GetError()});
+    )) std.log.warn("[SCRIPT] AudioPlayer: {s}\n", .{sdl.SDL_GetError()});
     self._volume = volume;
 }
 
@@ -120,11 +131,13 @@ fn start(s: *modules.Script, _: *modules.Object) void {
         &self._audio_buf,
         &self._audio_buf_len,
     )) {
-        std.log.err("{s}\n", .{sdl.SDL_GetError()});
+        std.log.err("[SCRIPT] AudioPlayer: {s}\n", .{sdl.SDL_GetError()});
         return;
     }
 
     self._audio_dur = self.getAudioDur();
+
+    if (self.autoplay) _ = self.play() catch {};
 }
 
 fn update(_: *modules.Script, _: *modules.Object, _: f32) void {}

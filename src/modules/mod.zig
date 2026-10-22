@@ -11,4 +11,5 @@ pub const Script = @import("script.zig").Script;
 pub const ScriptStrategy = @import("script.zig").ScriptStrategy;
 
 pub const AudioStream = @import("audio-stream.zig");
+pub const AudioTrack = @import("audio-track.zig");
 pub const PluginManager = @import("plugin-manager.zig");
