@@ -345,12 +345,35 @@ This guide provides brief instructions for installing SDL3 on various operating 
 
 For detailed instructions or troubleshooting, visit the [SDL3 documentation](https://wiki.libsdl.org/SDL3/Installation).
 
-
 ## TODOs
 
-### Version 0.1.0 [✅]
+<details>
 
-### Version 0.2.0 [⏳]
+<summary>Version 0.1.0 [✅]</summary>
+
+## Features
+- All keyboard and mouse key strokes are listed in the EventManager.
+- Objects parent-child relationship has been implemented.
+- The object functionality is now extendable; by integrating the LifeCycle within.
+- Differentiate between absolute and relative positions and rotations.
+- Objects now has active state; the scene only updates those who have active=true.
+- Name and tag properties are added into objects.
+- Objects inner-communication: scripts of any arbitrary object is now accessible via foreign objects; objects can call methods attached to any other object scripts.
+
+## Drawables & Scripts
+- The _Sprite_ drawable has been implemented. It can be used to render images/animation.
+- The _Text_ drawable has been implemented.
+- _AudioPlayer_ script has been implemented.
+
+## Refactoring
+- The EventManager has been Refactored, so that it no longer stores callbacks, it only mutate a global key-status state.
+- The code is more compliant to Zig explicit control philosophy.
+
+</details>
+
+<details open>
+
+<summary>Version 0.2.0 [⏳]</summary>
  
 #### Features
 - [x] Add loop, pause and volume settings in the AudioPlayer.
@@ -379,3 +402,5 @@ carries the source, and another carries the listener).
 - [x] Write UI Example.
 - [ ] Develop a [Pong game](https://www.ponggame.org/).
 - [ ] Develop a Sokoban game.
+
+</details>
