@@ -67,16 +67,26 @@ pub fn isEql(self: Vector, p: Vector) bool {
     return self.x == p.x and self.y == p.y and self.z == p.z;
 }
 
+/// NOTE: returns angle in radians
 pub fn evalAngleWith(self: Vector, v: Vector) f32 {
+    const cos = self.evalAngleCosWith(v);
+    return std.math.acos(cos);
+}
+
+pub fn evalAngleCosWith(self: Vector, v: Vector) f32 {
     const dot_product = (self.x * v.x) + (self.y * v.y) + (self.z * v.z);
     const self_mag = self.magnitude();
     const v_mag = v.magnitude();
-    if (self_mag == 0.00 or v_mag == 0.00) return 0.00;
 
-    var cos: f32 = dot_product / (self_mag * v_mag);
-    cos = @max(-1.00, @min(1.00, cos));
+    if (self_mag == 0.00 and v_mag == 0.00) return 0.00;
 
-    return std.math.acos(cos);
+    const cos: f32 = blk: {
+        if (self_mag == 0.00) break :blk v.x / v_mag;
+        if (v_mag == 0.00) break :blk self.x / self_mag;
+        break :blk dot_product / (self_mag * v_mag);
+    };
+
+    return @max(-1.00, @min(1.00, cos));
 }
 
 pub fn dot(self: Vector, v: Vector) f32 {

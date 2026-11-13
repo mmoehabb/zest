@@ -91,7 +91,7 @@ pub fn loadWAV(self: *AudioPlayer, path: []const u8) void {
     self._audio_dur = self.getAudioDur();
 }
 
-pub fn play(self: *AudioPlayer) !modules.AudioStream {
+pub fn play(self: *AudioPlayer) !*modules.AudioStream {
     var audio_stream = try modules.PluginManager.get(
         plugins.AudioManager,
         "AudioManager",

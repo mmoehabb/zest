@@ -348,8 +348,10 @@ For detailed instructions or troubleshooting, visit the [SDL3 documentation](htt
 
 ## TODOs
 
-### Version 0.2.0
+### Version 0.1.0 [✅]
 
+### Version 0.2.0 [⏳]
+ 
 #### Features
 - [x] Add loop, pause and volume settings in the AudioPlayer.
 - [x] Make scenes behave like cameras; they can zoom in and out, and move in the four directions.
@@ -366,7 +368,7 @@ NOTE: the memo should be invalidated as well when child objects are added to sce
 #### Scripts
 - [x] Implement _Rigidbody_ script; it should, at minimum, specify the mass of the object, detect collisions, and apply gravity.
 - [x] Implement _Collision_ script; any two objects with this script, and one of them is a rigid-body, they shall not overlap.
-- [ ] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
+- [x] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
 commence to play an audio, it searches for an AudioListener in the same scene. Once it find one, it plays \
 the audio with the volumes of its channels twisted according to the distance between the two objects (one \
 carries the source, and another carries the listener).

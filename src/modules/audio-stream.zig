@@ -5,7 +5,7 @@ const AudioStream = @This();
 
 _stream: ?*sdl.SDL_AudioStream = null,
 
-pub fn init(allocator: std.mem.Allocatorm, audio_spec: *sdl.SDL_AudioSpec) !*AudioStream {
+pub fn init(allocator: std.mem.Allocator, audio_spec: *sdl.SDL_AudioSpec) !*AudioStream {
     if (sdl.SDL_OpenAudioDeviceStream(
         sdl.SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
         audio_spec,
@@ -22,7 +22,7 @@ pub fn init(allocator: std.mem.Allocatorm, audio_spec: *sdl.SDL_AudioSpec) !*Aud
 }
 
 pub fn deinit(self: *AudioStream, allocator: std.mem.Allocator) void {
-    sdl.SDL_DestroyAudioStream(self._stream);
+    // sdl.SDL_DestroyAudioStream(self._stream); // For some reason this causes ARBT error!
     allocator.destroy(self);
 }
 
