@@ -20,10 +20,10 @@ jobs:
 
       - name: Setup SDL3
         run: |
-          wget https://github.com/libsdl-org/SDL/releases/download/release-3.2.26/SDL3-3.2.26.tar.gz
-          tar -xf SDL3-3.2.26.tar.gz
-          mkdir ./SDL3-3.2.26/build
-          cd ./SDL3-3.2.26/build
+          wget https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+          tar -xf SDL3-3.4.18.tar.gz
+          mkdir ./SDL3-3.4.18/build
+          cd ./SDL3-3.4.18/build
           cmake ..
           cmake --build . --parallel $(nproc)
           sudo cmake --install .
@@ -44,6 +44,16 @@ jobs:
           tar -xf SDL3_image-3.2.4.tar.gz
           mkdir ./SDL3_image-3.2.4/build
           cd ./SDL3_image-3.2.4/build
+          cmake ..
+          cmake --build . --parallel $(nproc)
+          sudo cmake --install .
+
+      - name: Setup SDL3_mixer
+        run: |
+          wget https://github.com/libsdl-org/SDL_mixer/releases/download/release-3.2.4/SDL3_mixer-3.2.4.tar.gz
+          tar -xf SDL3_mixer-3.2.4.tar.gz
+          mkdir ./SDL3_mixer-3.2.4/build
+          cd ./SDL3_mixer-3.2.4/build
           cmake ..
           cmake --build . --parallel $(nproc)
           sudo cmake --install .

@@ -14,7 +14,8 @@ zig build example:explosion &&
 zig build example:svg &&
 zig build example:geometric-shapes &&
 zig build example:gui &&
-zig build example:falling-boxes
+zig build example:falling-boxes &&
+zig build example:audio-attenuation
 """
 
 
@@ -27,3 +28,4 @@ svg = "zig build example:svg"
 geometric-shapes = "zig build example:geometric-shapes"
 gui = "zig build example:gui"
 falling-boxes = "zig build example:falling-boxes"
+audio-attenuation = "zig build example:audio-attenuation"

@@ -13,6 +13,7 @@ pub fn build(b: *std.Build) void {
     sdl_c.linkSystemLibrary("SDL3", .{ .needed = true });
     sdl_c.linkSystemLibrary("SDL3_ttf", .{ .needed = true });
     sdl_c.linkSystemLibrary("SDL3_image", .{ .needed = true });
+    sdl_c.linkSystemLibrary("SDL3_mixer", .{ .needed = true });
     sdl_c.link_libc = true;
 
     const zest = b.addModule("zest", .{
@@ -149,6 +150,21 @@ pub fn build(b: *std.Build) void {
     const exm8_run_cmd = b.addRunArtifact(exm8);
     const exm8_run_step = b.step("example:falling-boxes", "Run examples/falling-boxes.zig");
     exm8_run_step.dependOn(&exm8_run_cmd.step);
+
+    const exm9 = b.addExecutable(.{
+        .name = "example:audio-attenuation",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/audio-attenuation.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
+    });
+    exm9.root_module.addImport("zest", zest);
+    b.installArtifact(exm9);
+
+    const exm9_run_cmd = b.addRunArtifact(exm9);
+    const exm9_run_step = b.step("example:audio-attenuation", "Run examples/audio-attenuation.zig");
+    exm9_run_step.dependOn(&exm9_run_cmd.step);
 
     // ***********************************
     // ********** Add test step **********

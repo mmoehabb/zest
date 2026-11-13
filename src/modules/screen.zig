@@ -67,12 +67,8 @@ pub fn open(self: *Screen) !void {
         return error.SDLInitializationFailed;
     }
 
-    if (!sdl.SDL_Init(sdl.SDL_INIT_AUDIO)) {
-        sdl.SDL_Log("Unable to initialize SDL Audio: %s", sdl.SDL_GetError());
-    }
-
     if (!sdl.TTF_Init()) {
-        return error.TTFInitializationFailed;
+        sdl.SDL_Log("Unable to initialize TTF: %s", sdl.SDL_GetError());
     }
 
     self._window = sdl.SDL_CreateWindow(
@@ -100,7 +96,14 @@ pub fn open(self: *Screen) !void {
     while (self._opened) try self.update();
 }
 
+var _lastPerfCounter: u64 = 0;
+
 fn update(self: *Screen) !void {
+    // calculate delta time in seconds
+    const curPerfCounter = sdl.SDL_GetPerformanceCounter();
+    const perfFreq = @as(f32, @floatFromInt(sdl.SDL_GetPerformanceFrequency()));
+    const dt = @as(f32, @floatFromInt(curPerfCounter - _lastPerfCounter)) / perfFreq;
+
     if (self.lifecycle.preUpdate) |func| func(self);
 
     if (self._em) |em| {
@@ -108,11 +111,9 @@ fn update(self: *Screen) !void {
         if (event.type == sdl.SDL_EVENT_QUIT) return try self.close();
     }
 
-    const dt: f32 = @as(f32, @floatFromInt(self.rate)) / 1000.0; // ms to seconds
-
     _ = sdl.SDL_RenderClear(self._renderer);
     if (self._scene) |s| {
-        try s.update(dt);
+        try s.update(dt / 1000);
         try s.draw(self._renderer.?);
     }
     // TODO: get the background color from user input
