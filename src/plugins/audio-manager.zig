@@ -5,6 +5,7 @@ const std = @import("std");
 const sdl = @import("sdl");
 const AudioStream = @import("../modules/audio-stream.zig");
 const AudioTrack = @import("../modules/audio-track.zig");
+const Object = @import("../modules/object.zig");
 
 const AudioManager = @This();
 
@@ -13,9 +14,10 @@ _io_thread: ?std.Thread = null,
 _allocator: std.mem.Allocator,
 _deinitialized: bool = false,
 
-/// The audio streams retrieved from SDL_OpenAudioDeviceStream.
 _audio_streams: std.ArrayList(*AudioStream) = std.ArrayList(*AudioStream).empty,
 _audio_tracks: std.ArrayList(*AudioTrack) = std.ArrayList(*AudioTrack).empty,
+_audio_listeners: std.ArrayList(*Object) = std.ArrayList(*Object).empty,
+
 _mixer: ?*sdl.MIX_Mixer,
 
 pub fn init(allocator: std.mem.Allocator, io: std.Io) !AudioManager {
@@ -35,6 +37,7 @@ pub fn init(allocator: std.mem.Allocator, io: std.Io) !AudioManager {
         ._allocator = allocator,
         ._audio_streams = std.ArrayList(*AudioStream).empty,
         ._audio_tracks = std.ArrayList(*AudioTrack).empty,
+        ._audio_listeners = std.ArrayList(*Object).empty,
         ._mixer = mixer,
     };
 }
@@ -50,6 +53,27 @@ pub fn deinit(self: *AudioManager) void {
 
     for (self._audio_tracks.items) |track| track.deinit(self._allocator);
     self._audio_tracks.deinit(self._allocator);
+
+    self._audio_listeners.deinit(self._allocator);
+}
+
+/// This function should be used by AudioListener script in order to inform the manager
+/// of the available listeners in the scene.
+pub fn addListener(self: *AudioManager, obj: *Object) !void {
+    try self._audio_listeners.append(self._allocator, obj);
+}
+
+/// This function should be used by AudioListener script in order to inform the manager
+/// whenever a listener is no longer available in the scene.
+pub fn rmvListener(self: *AudioManager, obj: *Object) void {
+    var index: ?usize = null;
+    for (self._audio_listeners.items, 0..) |o, i| {
+        if (o == obj) {
+            index = i;
+            break;
+        }
+    }
+    if (index) |i| _ = self._audio_listeners.orderedRemove(i);
 }
 
 /// This creates a new (paused, by default) audio stream and return it for the user to use.

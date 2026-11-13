@@ -26,6 +26,9 @@ pub fn main(init: std.process.Init) !void {
     var movement = try zest.scripts.Movement.init(allocator, 5, true);
     defer movement.deinit();
 
+    var audioListener = try zest.scripts.AudioListener.init(allocator);
+    defer audioListener.deinit();
+
     var obj = zest.modules.Object.init(allocator, .{
         .name = "GreenBox",
         .position = .{ .x = 20, .y = 20, .z = 1 },
@@ -34,6 +37,7 @@ pub fn main(init: std.process.Init) !void {
     });
     defer obj.deinit();
     try obj.addScript(movement.toScript());
+    try obj.addScript(audioListener.toScript());
 
     // Radio Object
     var yrect = zest.drawables.Rect.new(

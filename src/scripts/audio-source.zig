@@ -12,6 +12,9 @@ path: []const u8,
 autoplay: bool = false,
 loop: bool = false,
 
+minD: f32 = 100.0,
+maxD: f32 = 1000.0,
+
 _volume: f32 = 1.0,
 _track: ?*modules.AudioTrack = null,
 
@@ -22,28 +25,40 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
 },
 
 _allocator: std.mem.Allocator,
+_manager: *plugins.AudioManager,
 
 pub fn init(allocator: std.mem.Allocator, config: struct {
     path: []const u8 = "",
     loop: bool = false,
     autoplay: bool = false,
+    minD: f32 = 100.0,
+    maxD: f32 = 1000.0,
 }) !*AudioSource {
-    var audioSource = try allocator.create(AudioSource);
-    audioSource.path = config.path;
-    audioSource.loop = config.loop;
-    audioSource.autoplay = config.autoplay;
-    audioSource._volume = 1.0;
-    audioSource._track = try modules.PluginManager.get(
+    const audioManager = modules.PluginManager.get(
         plugins.AudioManager,
         "AudioManager",
-    ).?.newTrack(config.path);
-    audioSource._script_strategy = .{
-        .start = start,
-        .update = update,
-        .end = end,
-    };
-    audioSource._allocator = allocator;
-    return audioSource;
+    );
+    if (audioManager) |manager| {
+        var audioSource = try allocator.create(AudioSource);
+        audioSource.path = config.path;
+        audioSource.loop = config.loop;
+        audioSource.autoplay = config.autoplay;
+        audioSource.minD = config.minD;
+        audioSource.maxD = config.maxD;
+        audioSource._volume = 1.0;
+        audioSource._track = try manager.newTrack(config.path);
+        audioSource._script_strategy = .{
+            .start = start,
+            .update = update,
+            .end = end,
+        };
+        audioSource._allocator = allocator;
+        audioSource._manager = manager;
+        return audioSource;
+    } else {
+        std.log.err("[SCRIPT] AudioListener: You must add AudioManager plugin.", .{});
+        return error.PluginNotFound;
+    }
 }
 
 pub fn deinit(self: *AudioSource) void {
@@ -74,18 +89,42 @@ fn start(s: *modules.Script, _: *modules.Object) void {
     if (self.autoplay) self.play();
 }
 
-fn update(_: *modules.Script, _: *modules.Object, _: f32) void {
-    // const self = @as(
-    //     *AudioSource,
-    //     @constCast(@fieldParentPtr("_script_strategy", s.strategy)),
-    // );
+fn update(s: *modules.Script, obj: *modules.Object, _: f32) void {
+    const self = @as(
+        *AudioSource,
+        @constCast(@fieldParentPtr("_script_strategy", s.strategy)),
+    );
 
-    // Get the target (any object with audio listener)
-    // Calculate the distance between the carrier object and the target
-    // Calculate audio attenuation using the distance `A(d)`
-    // Calculate the angle between the carrier object and the target
-    // Calculate Pl (left panning coefficient) and Pr (right panning coefficient)
-    // Calculate Gl (left-channel gain) and Gr (right-channel gain)
+    if (self._track) |track| {
+        var gl: f32 = 0.00;
+        var gr: f32 = 0.00;
+        const n: f32 = @as(f32, @floatFromInt(self._manager._audio_listeners.items.len));
+        if (n <= 0.00) return;
+
+        for (self._manager._audio_listeners.items) |target| {
+            // Calculate the distance between the carrier object and the target
+            const d = obj.position.subtract(target.position).magnitude();
+
+            // Calculate audio attenuation using the distance `A(d)`
+            const atten = 1.0 - std.math.clamp((d - self.minD) / (self.maxD - self.minD), 0.0, 1.0);
+
+            // Calculate the angle of the vector from the carrier position to the target position.
+            const v = target.position.subtract(obj.position);
+            const v_mag = v.magnitude();
+            const p = if (v_mag > 0.00) v.x / v_mag else 0.00;
+
+            // Calculate Pl (left panning coefficient) and Pr (right panning coefficient)
+            const ang = ((p + 1.0) / 4.0) * std.math.pi;
+            const pl = @sin(ang);
+            const pr = @cos(ang);
+
+            // Calculate Gl (left-channel gain) and Gr (right-channel gain)
+            gl += @abs(self._volume * atten * pl);
+            gr += @abs(self._volume * atten * pr);
+        }
+
+        _ = track.setGains(gl / n, gr / n);
+    }
 }
 
 fn end(_: *modules.Script, _: *modules.Object) void {}

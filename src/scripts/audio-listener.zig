@@ -20,16 +20,25 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
 
 _allocator: std.mem.Allocator,
 
-pub fn init(allocator: std.mem.Allocator) *AudioListener {
-    var audioListener = try allocator.create(AudioListener);
-    audioListener.volume = 1.0;
-    audioListener._script_strategy = .{
-        .start = start,
-        .update = update,
-        .end = end,
-    };
-    audioListener._allocator = allocator;
-    return audioListener;
+pub fn init(allocator: std.mem.Allocator) !*AudioListener {
+    const audioManager = modules.PluginManager.get(
+        plugins.AudioManager,
+        "AudioManager",
+    );
+    if (audioManager) |_| {
+        var audioListener = try allocator.create(AudioListener);
+        audioListener.volume = 1.0;
+        audioListener._script_strategy = .{
+            .start = start,
+            .update = update,
+            .end = end,
+        };
+        audioListener._allocator = allocator;
+        return audioListener;
+    } else {
+        std.log.err("[SCRIPT] AudioListener: You must add AudioManager plugin.", .{});
+        return error.PluginNotFound;
+    }
 }
 
 pub fn deinit(self: *AudioListener) void {
@@ -43,8 +52,20 @@ pub fn toScript(self: *AudioListener) modules.Script {
     };
 }
 
-fn start(_: *modules.Script, _: *modules.Object) void {}
+fn start(_: *modules.Script, obj: *modules.Object) void {
+    var audioManager = modules.PluginManager.get(
+        plugins.AudioManager,
+        "AudioManager",
+    ).?;
+    audioManager.addListener(obj) catch {};
+}
 
 fn update(_: *modules.Script, _: *modules.Object, _: f32) void {}
 
-fn end(_: *modules.Script, _: *modules.Object) void {}
+fn end(_: *modules.Script, obj: *modules.Object) void {
+    var audioManager = modules.PluginManager.get(
+        plugins.AudioManager,
+        "AudioManager",
+    ).?;
+    audioManager.rmvListener(obj);
+}
