@@ -36,7 +36,7 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
 },
 
 pub fn new(b: Button) !Button {
-    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+    if (modules.PluginManager.get(plugins.EventManager)) |em| {
         return Button{
             .label = b.label,
             .dim = b.dim,

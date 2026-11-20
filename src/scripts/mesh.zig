@@ -35,13 +35,13 @@ pub fn deinit(self: *Mesh) void {
 
 pub fn toScript(self: *Mesh) modules.Script {
     return modules.Script{
-        .name = "Mesh",
+        .name = @typeName(Mesh),
         .strategy = &self._script_strategy,
     };
 }
 
 fn start(_: *modules.Script, obj: *modules.Object) void {
-    modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector").?.addObject(obj) catch std.debug.print(
+    modules.PluginManager.get(plugins.CollisionDetector).?.addObject(obj) catch std.debug.print(
         "Mesh: couldn't add object into the physics engine!",
         .{},
     );
@@ -50,5 +50,5 @@ fn start(_: *modules.Script, obj: *modules.Object) void {
 fn update(_: *modules.Script, _: *modules.Object, _: f32) void {}
 
 fn end(_: *modules.Script, obj: *modules.Object) void {
-    modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector").?.rmvObject(obj);
+    modules.PluginManager.get(plugins.CollisionDetector).?.rmvObject(obj);
 }

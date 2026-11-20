@@ -38,7 +38,7 @@ _collisions: std.ArrayList(Collision) = .empty,
 
 pub fn init(allocator: std.mem.Allocator) !JammingResolver {
     if (PluginManager.isInitialized() == false) return error.PluginManagerRequired;
-    if (PluginManager.get(CollisionDetector, "CollisionDetector")) |cd| {
+    if (PluginManager.get(CollisionDetector)) |cd| {
         return .{
             ._collisionDetector = cd,
             ._allocator = allocator,
@@ -55,7 +55,7 @@ pub fn deinit(self: *JammingResolver) void {
 /// Add object to the collection in which jamming shall be resolved.
 /// NOTE: object must carry the rigidbody script.
 pub fn addObject(self: *JammingResolver, obj: *Object) !void {
-    if (obj.getScript(Rigidbody, "Rigidbody") == null) {
+    if (obj.getScript(Rigidbody) == null) {
         std.log.err("JammingResolver.addObject: added objects must contain the Rigidbody script.", .{});
         return error.RigidbodyRequired;
     }
@@ -87,7 +87,7 @@ pub fn resolve(self: *JammingResolver, refreshCollisions: bool) void {
 
         // - Get the negative momentum which shall be used in order to get the
         //   original positions of the object face points.
-        const rigid1 = obj1.getScript(Rigidbody, "Rigidbody").?;
+        const rigid1 = obj1.getScript(Rigidbody).?;
         const nmom = rigid1.velocity.multiply(-1);
         const pos1 = obj1.position.add(nmom);
 

@@ -29,7 +29,7 @@ pub fn init(data: struct {
     static: bool = false,
 }) !*Rigidbody {
     // Ensure required plugins are available
-    const cd = modules.PluginManager.get(plugins.CollisionDetector, "CollisionDetector");
+    const cd = modules.PluginManager.get(plugins.CollisionDetector);
     if (cd == null) return error.CollisionDetectorRequired;
 
     // Initialize the script
@@ -57,7 +57,7 @@ pub fn deinit(self: *Rigidbody) void {
 
 pub fn toScript(self: *Rigidbody) modules.Script {
     return modules.Script{
-        .name = "Rigidbody",
+        .name = @typeName(Rigidbody),
         .strategy = &self._script_strategy,
     };
 }
@@ -67,7 +67,7 @@ fn start(s: *modules.Script, obj: *modules.Object) void {
         @fieldParentPtr("_script_strategy", s.strategy),
     ));
     if (!self.static) {
-        if (modules.PluginManager.get(plugins.JammingResolver, "JammingResolver")) |jr| {
+        if (modules.PluginManager.get(plugins.JammingResolver)) |jr| {
             jr.addObject(obj) catch std.log.warn(
                 "Rigidbody.start: couldn't add the object into the JammingResolver!",
                 .{},
@@ -97,7 +97,7 @@ fn update(s: *modules.Script, obj: *modules.Object, dt: f32) void {
 }
 
 fn end(_: *modules.Script, obj: *modules.Object) void {
-    if (modules.PluginManager.get(plugins.JammingResolver, "JammingResolver")) |jr| {
+    if (modules.PluginManager.get(plugins.JammingResolver)) |jr| {
         jr.rmvObject(obj);
     }
 }

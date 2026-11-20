@@ -34,10 +34,7 @@ pub fn init(allocator: std.mem.Allocator, config: struct {
     minD: f32 = 100.0,
     maxD: f32 = 1000.0,
 }) !*AudioSource {
-    const audioManager = modules.PluginManager.get(
-        plugins.AudioManager,
-        "AudioManager",
-    );
+    const audioManager = modules.PluginManager.get(plugins.AudioManager);
     if (audioManager) |manager| {
         var audioSource = try allocator.create(AudioSource);
         audioSource.path = config.path;
@@ -67,7 +64,7 @@ pub fn deinit(self: *AudioSource) void {
 
 pub fn toScript(self: *AudioSource) modules.Script {
     return modules.Script{
-        .name = "AudioSource",
+        .name = @typeName(AudioSource),
         .strategy = &self._script_strategy,
     };
 }

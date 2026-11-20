@@ -34,9 +34,8 @@ pub const ScriptStrategy = struct {
 
 pub const Script = struct {
     /// A distinct name so that it can be filtered and accessed via the object.
-    /// By convention, It should just equal the exact name of the script.
-    ///
-    /// For example, AudioPlayer script shall, normally, have the name = "AudioPlayer".
+    /// By convention, It should just equal @typeName(YOUR_SCRIPT_TYPE). e.g.
+    /// AudioPlayer script shall, normally, have the name = @typeName(AudioPlayer).
     name: []const u8,
 
     strategy: *ScriptStrategy,

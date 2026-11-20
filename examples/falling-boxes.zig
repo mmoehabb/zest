@@ -13,15 +13,15 @@ pub fn main(init: std.process.Init) !void {
     var collisionDetector = zest.plugins.CollisionDetector.init(allocator, init.io);
     try collisionDetector.start(false);
     defer collisionDetector.deinit();
-    try pm.add(&collisionDetector, "CollisionDetector");
+    try pm.add(&collisionDetector, @typeName(@TypeOf(collisionDetector)));
 
     var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
-    try pm.add(&eventManager, "EventManager");
+    try pm.add(&eventManager, @typeName(@TypeOf(eventManager)));
 
     var jammingResolver = try zest.plugins.JammingResolver.init(allocator);
     defer jammingResolver.deinit();
-    try pm.add(&jammingResolver, "JammingResolver");
+    try pm.add(&jammingResolver, @typeName(@TypeOf(jammingResolver)));
     // <<<
 
     // Create boxes and terrain objects
@@ -93,7 +93,7 @@ pub fn main(init: std.process.Init) !void {
     scene.lifecycle.postUpdate = struct {
         var jr: ?*zest.plugins.JammingResolver = null;
         fn func(_: *anyopaque) void {
-            jr = jr orelse zest.modules.PluginManager.get(zest.plugins.JammingResolver, "JammingResolver").?;
+            jr = jr orelse zest.modules.PluginManager.get(zest.plugins.JammingResolver).?;
             jr.?.resolve(true);
         }
     }.func;

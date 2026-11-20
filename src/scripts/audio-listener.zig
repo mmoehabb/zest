@@ -21,10 +21,7 @@ _script_strategy: modules.ScriptStrategy = modules.ScriptStrategy{
 _allocator: std.mem.Allocator,
 
 pub fn init(allocator: std.mem.Allocator) !*AudioListener {
-    const audioManager = modules.PluginManager.get(
-        plugins.AudioManager,
-        "AudioManager",
-    );
+    const audioManager = modules.PluginManager.get(plugins.AudioManager);
     if (audioManager) |_| {
         var audioListener = try allocator.create(AudioListener);
         audioListener.volume = 1.0;
@@ -47,25 +44,19 @@ pub fn deinit(self: *AudioListener) void {
 
 pub fn toScript(self: *AudioListener) modules.Script {
     return modules.Script{
-        .name = "AudioListener",
+        .name = @typeName(AudioListener),
         .strategy = &self._script_strategy,
     };
 }
 
 fn start(_: *modules.Script, obj: *modules.Object) void {
-    var audioManager = modules.PluginManager.get(
-        plugins.AudioManager,
-        "AudioManager",
-    ).?;
+    var audioManager = modules.PluginManager.get(plugins.AudioManager).?;
     audioManager.addListener(obj) catch {};
 }
 
 fn update(_: *modules.Script, _: *modules.Object, _: f32) void {}
 
 fn end(_: *modules.Script, obj: *modules.Object) void {
-    var audioManager = modules.PluginManager.get(
-        plugins.AudioManager,
-        "AudioManager",
-    ).?;
+    var audioManager = modules.PluginManager.get(plugins.AudioManager).?;
     audioManager.rmvListener(obj);
 }

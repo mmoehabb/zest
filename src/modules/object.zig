@@ -162,9 +162,15 @@ pub fn addScript(self: *Object, script: Script) !void {
     try self._scripts.append(self._allocator, script);
 }
 
+/// Wrapper on getScriptByName; the name is derived from the type using @typeName()
+/// zig built-in function.
+pub fn getScript(self: *Object, P: type) ?*P {
+    return self.getScriptByName(P, @typeName(P));
+}
+
 /// By convention, the name of any script should equal exactly the name of the type.
 /// See [root.modules.script.name](#root.modules.script.name).
-pub fn getScript(self: *Object, P: type, name: []const u8) ?*P {
+pub fn getScriptByName(self: *Object, P: type, name: []const u8) ?*P {
     if (self._scripts_memo.get(name)) |found| {
         return @as(
             *P,

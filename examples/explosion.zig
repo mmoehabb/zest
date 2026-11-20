@@ -11,8 +11,8 @@ pub fn main(init: std.process.Init) !void {
     defer audioManager.deinit();
 
     try zest.modules.PluginManager.init(allocator);
-    try zest.modules.PluginManager.add(&eventManager, "EventManager");
-    try zest.modules.PluginManager.add(&audioManager, "AudioManager");
+    try zest.modules.PluginManager.add(&eventManager, @typeName(@TypeOf(eventManager)));
+    try zest.modules.PluginManager.add(&audioManager, @typeName(@TypeOf(audioManager)));
     defer zest.modules.PluginManager.deinit();
 
     // Create sprite object
@@ -70,8 +70,8 @@ pub fn main(init: std.process.Init) !void {
 
         fn func(self: *anyopaque) void {
             const o = @as(*zest.modules.Object, @ptrCast(@alignCast(self)));
-            em = em orelse zest.modules.PluginManager.get(zest.plugins.EventManager, "EventManager").?;
-            var ap = o.getScript(zest.scripts.AudioPlayer, "AudioPlayer");
+            em = em orelse zest.modules.PluginManager.get(zest.plugins.EventManager).?;
+            var ap = o.getScript(zest.scripts.AudioPlayer);
 
             if (em.?.isKeyDown(.Space) and !pressed) {
                 _ = ap.?.play() catch unreachable;

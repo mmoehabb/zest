@@ -72,7 +72,7 @@ pub fn deinit(self: *AudioPlayer) void {
 
 pub fn toScript(self: *AudioPlayer) modules.Script {
     return modules.Script{
-        .name = "AudioPlayer",
+        .name = @typeName(AudioPlayer),
         .strategy = &self._script_strategy,
     };
 }
@@ -92,10 +92,7 @@ pub fn loadWAV(self: *AudioPlayer, path: []const u8) void {
 }
 
 pub fn play(self: *AudioPlayer) !*modules.AudioStream {
-    var audio_stream = try modules.PluginManager.get(
-        plugins.AudioManager,
-        "AudioManager",
-    ).?.newStream(&self._audio_spec);
+    var audio_stream = try modules.PluginManager.get(plugins.AudioManager).?.newStream(&self._audio_spec);
     audio_stream.@"resume"(); // NOTE: streams are paused by default
     audio_stream.putAudio(self._audio_buf, self._audio_buf_len);
 

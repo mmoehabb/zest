@@ -31,7 +31,7 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
 _em: ?*plugins.EventManager = null,
 
 pub fn new(c: CheckBox) !CheckBox {
-    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+    if (modules.PluginManager.get(plugins.EventManager)) |em| {
         return CheckBox{
             .checked = c.checked,
             .dim = c.dim,
