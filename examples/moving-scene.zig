@@ -8,7 +8,7 @@ pub fn main(init: std.process.Init) !void {
     var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
     try zest.modules.PluginManager.init(allocator);
-    try zest.modules.PluginManager.add(&eventManager, "EventManager");
+    try zest.modules.PluginManager.add(&eventManager, @typeName(@TypeOf(eventManager)));
     defer zest.modules.PluginManager.deinit();
 
     // Create a drawable object
@@ -65,7 +65,7 @@ pub fn main(init: std.process.Init) !void {
         var em: ?*zest.plugins.EventManager = null;
         fn func(self: *anyopaque) void {
             const s = @as(*zest.modules.Scene, @ptrCast(@alignCast(self)));
-            em = em orelse zest.modules.PluginManager.get(zest.plugins.EventManager, "EventManager").?;
+            em = em orelse zest.modules.PluginManager.get(zest.plugins.EventManager).?;
             if (em.?.isKeyDown(.W)) s.move(.{ .y = 5 });
             if (em.?.isKeyDown(.D)) s.move(.{ .x = -5 });
             if (em.?.isKeyDown(.S)) s.move(.{ .y = -5 });

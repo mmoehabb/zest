@@ -22,11 +22,18 @@ pub fn isInitialized() bool {
     return initialized;
 }
 
+/// By convention, name should equal to @typeName(plugin)
 pub fn add(plugin: *anyopaque, name: []const u8) !void {
     try plugins.?.put(name, plugin);
 }
 
-pub fn get(P: type, name: []const u8) ?*P {
+/// Wrapper on getByName method; it derives the name from
+/// the type P via the built-in function @typeName().
+pub fn get(P: type) ?*P {
+    return getByName(P, @typeName(P));
+}
+
+pub fn getByName(P: type, name: []const u8) ?*P {
     const found = plugins.?.get(name);
     if (found) |plugin| return @ptrCast(@alignCast(plugin));
     return null;

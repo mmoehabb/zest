@@ -40,7 +40,7 @@ pub fn main(init: std.process.Init) !void {
     var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
     try zest.modules.PluginManager.init(allocator);
-    try zest.modules.PluginManager.add(&eventManager, "EventManager");
+    try zest.modules.PluginManager.add(&eventManager, @typeName(@TypeOf(eventManager)));
     defer zest.modules.PluginManager.deinit();
 
     var button = try GUI.Button.new(.{

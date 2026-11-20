@@ -22,7 +22,7 @@ _allocator: std.mem.Allocator,
 _em: *plugins.EventManager,
 
 pub fn init(allocator: std.mem.Allocator, velocity: f32, smooth: bool) !*Movement {
-    const eventManager = modules.PluginManager.get(plugins.EventManager, "EventManager");
+    const eventManager = modules.PluginManager.get(plugins.EventManager);
     if (eventManager) |em| {
         var script = try allocator.create(Movement);
         script.velocity = velocity;
@@ -47,7 +47,7 @@ pub fn deinit(self: *Movement) void {
 
 pub fn toScript(self: *Movement) modules.Script {
     return modules.Script{
-        .name = "Movement",
+        .name = @typeName(Movement),
         .strategy = &self._script_strategy,
     };
 }

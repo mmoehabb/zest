@@ -50,7 +50,7 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
 _em: ?*plugins.EventManager = null,
 
 pub fn new(allocator: std.mem.Allocator, t: TextInput) !TextInput {
-    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+    if (modules.PluginManager.get(plugins.EventManager)) |em| {
         const buf = try allocator.alloc(u8, t.max_len + 1);
         @memset(buf, 0);
         return TextInput{

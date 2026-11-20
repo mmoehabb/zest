@@ -20,7 +20,7 @@ pub fn new(io: std.Io, dim: types.Dimensions, _: types.Color) !SVG {
         return error.PluginManagerRequired;
     }
 
-    const stringFactory = modules.PluginManager.get(plugins.StringFactory, "StringFactory");
+    const stringFactory = modules.PluginManager.get(plugins.StringFactory);
     if (stringFactory) |sf| {
         const format =
             \\<svg width="{0}" height="{1}" xmlns="http://www.w3.org/2000/svg">

@@ -47,7 +47,7 @@ _draw_strategy: modules.DrawStrategy = modules.DrawStrategy{
 _em: ?*plugins.EventManager = null,
 
 pub fn new(allocator: std.mem.Allocator, s: Select) !Select {
-    if (modules.PluginManager.get(plugins.EventManager, "EventManager")) |em| {
+    if (modules.PluginManager.get(plugins.EventManager)) |em| {
         return Select{
             .options = s.options,
             .dim = s.dim,

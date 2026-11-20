@@ -43,7 +43,7 @@ pub fn init(
         std.log.err("Screen.init: you must initialize the PluginManager first.", .{});
         return error.PluginManagerRequired;
     }
-    const eventManager = PluginManager.get(EventManager, "EventManager");
+    const eventManager = PluginManager.get(EventManager);
     return Screen{
         .title = params.title,
         .width = params.width,

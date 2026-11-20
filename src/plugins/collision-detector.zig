@@ -125,7 +125,7 @@ pub fn detectCollision(self: *CollisionDetector) void {
 
     // Get all faces available in the space
     for (self._objects.items) |obj| {
-        const mesh = obj.getScript(Mesh, "Mesh");
+        const mesh = obj.getScript(Mesh);
         if (mesh) |m| {
             for (m.faces) |face| {
                 // TODO: enhance error handling

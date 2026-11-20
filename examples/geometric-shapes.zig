@@ -11,8 +11,8 @@ pub fn main(init: std.process.Init) !void {
     defer stringFactory.deinit();
 
     try zest.modules.PluginManager.init(allocator);
-    try zest.modules.PluginManager.add(&eventManager, "EventManager");
-    try zest.modules.PluginManager.add(&stringFactory, "StringFactory");
+    try zest.modules.PluginManager.add(&eventManager, @typeName(@TypeOf(eventManager)));
+    try zest.modules.PluginManager.add(&stringFactory, @typeName(@TypeOf(stringFactory)));
     defer zest.modules.PluginManager.deinit();
 
     // A Green Rectangle
