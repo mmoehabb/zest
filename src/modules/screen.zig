@@ -103,6 +103,7 @@ fn update(self: *Screen) !void {
     const curPerfCounter = sdl.SDL_GetPerformanceCounter();
     const perfFreq = @as(f32, @floatFromInt(sdl.SDL_GetPerformanceFrequency()));
     const dt = @as(f32, @floatFromInt(curPerfCounter - _lastPerfCounter)) / perfFreq;
+    _lastPerfCounter = curPerfCounter;
 
     if (self.lifecycle.preUpdate) |func| func(self);
 

@@ -17,6 +17,7 @@ static: bool = false,
 velocity: types.Vector = .{},
 acceleration: types.Vector = .{},
 _collisions: std.ArrayList(types.Collision) = .empty,
+_dt_coe: f32 = 20000.0,
 
 _allocator: std.mem.Allocator,
 _script_strategy: modules.ScriptStrategy,
@@ -47,6 +48,7 @@ pub fn init(data: struct {
     rigidbody._collisions = .empty;
     rigidbody.velocity = .{};
     rigidbody.acceleration = .{};
+    rigidbody._dt_coe = 20000;
     return rigidbody;
 }
 
@@ -89,11 +91,9 @@ fn update(s: *modules.Script, obj: *modules.Object, dt: f32) void {
         self.velocity = self.velocity.multiply(0);
         return;
     }
-
-    self.velocity = self.velocity.add(self.acceleration);
-    obj.position = obj.position.add(self.velocity);
-
-    self.acceleration.y = @max(self.acceleration.y, 9.8 * self.gravity * dt);
+    self.velocity = self.velocity.add(self.acceleration.multiply(self._dt_coe * dt));
+    obj.position = obj.position.add(self.velocity.multiply(self._dt_coe * dt));
+    self.acceleration.y = @max(self.acceleration.y, self.gravity);
 }
 
 fn end(_: *modules.Script, obj: *modules.Object) void {
