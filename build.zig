@@ -166,6 +166,22 @@ pub fn build(b: *std.Build) void {
     const exm9_run_step = b.step("example:audio-attenuation", "Run examples/audio-attenuation.zig");
     exm9_run_step.dependOn(&exm9_run_cmd.step);
 
+    // EXAMPLE: Animator
+    const exm10 = b.addExecutable(.{
+        .name = "example:animator",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/animator.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
+    });
+    exm10.root_module.addImport("zest", zest);
+    b.installArtifact(exm10);
+
+    const exm10_run_cmd = b.addRunArtifact(exm10);
+    const exm10_run_step = b.step("example:animator", "Run examples/animator.zig");
+    exm10_run_step.dependOn(&exm10_run_cmd.step);
+
     // ***********************************
     // ********** Add test step **********
     // ***********************************
